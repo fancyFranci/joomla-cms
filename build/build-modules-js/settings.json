@@ -429,6 +429,23 @@
           "dist/metismenujs.min.js": "js/metismenujs.min.js",
           "dist/metismenujs.min.js.map": "js/metismenujs.min.js.map"
         }
+      },
+      "raphael": {
+        "name": "raphael",
+        "licenseFilename": "licence.txt",
+        "js": {
+          "raphael.min.js": "js/raphael.min.js"
+        }
+      },
+      "graphdracula": {
+        "name": "graphdracula",
+        "licenseFilename": "LICENSE",
+        "js": {
+          "dist/dracula.min.js": "js/dracula.min.js"
+        },
+        "dependencies": [
+          "raphael"
+        ]
       }
     },
     "errorPages": {

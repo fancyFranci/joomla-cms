@@ -36,6 +36,7 @@
     "dragula": "3.7.2",
     "focus-visible": "^4.1.4",
     "font-awesome": "4.7.0",
+    "graphdracula": "^1.2.1",
     "joomla-ui-custom-elements": "0.0.30",
     "jquery": "3.3.1",
     "jquery-migrate": "^3.0.1",
@@ -43,6 +44,7 @@
     "metismenujs": "^1.0.3",
     "popper.js": "^1.14.3",
     "punycode": "1.4.1",
+    "raphael": "^2.2.7",
     "tinymce": "4.8.3"
   },
   "devDependencies": {
