@@ -45,21 +45,23 @@ class HtmlView extends BaseHtmlView
 	 */
 	protected $extension;
 
-	/**
-	 * Display the view
-	 *
-	 * @param   string $tpl The name of the template file to parse; automatically searches through the template paths.
-	 *
-	 * @since  4.0.0
-	 */
+    /**
+     * Display the view
+     *
+     * @param   string $tpl The name of the template file to parse; automatically searches through the template paths.
+     *
+     * @since  4.0.0
+     * @throws \Exception
+     */
 	public function display($tpl = null)
 	{
 		$this->workflow   = $this->get('Item');
 		$this->workflowID = $this->workflow['id'];
 		$this->extension  = $this->workflow['extension'];
 
-		HTMLHelper::_('script', 'media/vendor/graphdracula/js/dracula.min.js', array('version' => 'auto', 'relative' => true));
-		HTMLHelper::_('script', 'com_workflow/workflow-graph.js', ['version' => 'auto', 'relative' => true]);
+        HTMLHelper::_('script', 'media/vendor/raphael/js/raphael.min.js', array('version' => 'auto', 'relative' => false));
+        HTMLHelper::_('script', 'media/vendor/graphdracula/js/dracula.min.js', array('version' => 'auto', 'relative' => false));
+        HTMLHelper::_('script', 'com_workflow/workflow-graph.js', ['version' => 'auto', 'relative' => true]);
 
 		return parent::display($tpl);
 	}

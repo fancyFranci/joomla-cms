@@ -434,6 +434,7 @@
         "name": "raphael",
         "licenseFilename": "licence.txt",
         "js": {
+          "raphael.js": "js/raphael.js",
           "raphael.min.js": "js/raphael.min.js"
         }
       },
