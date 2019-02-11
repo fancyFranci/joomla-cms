@@ -22,79 +22,105 @@ use Joomla\CMS\MVC\Model\BaseDatabaseModel;
  */
 class GraphModel extends BaseDatabaseModel
 {
-	/**
-	 * Get workflow item including its transitions and stages.
-	 *
-	 * @return array|boolean
-	 *
-	 * @since 4.0
-	 */
-	public function getItem()
-	{
-		$workflowID = Factory::getApplication()->input->get('id');
+    /**
+     * Get workflow item including its transitions and stages.
+     *
+     * @return array|boolean
+     *
+     * @since 4.0
+     */
+    public function getItem()
+    {
+        $workflowID = Factory::getApplication()->input->get('id');
 
-		$db    = Factory::getDbo();
-		$query = $db->getQuery(true);
-		$query->select('*')
-			->from($db->qn('#__workflows'))
-			->where($db->qn('id') . ' = ' . (int) $workflowID);
+        $db = Factory::getDbo();
+        $query = $db->getQuery(true);
+        $query->select('*')
+            ->from($db->qn('#__workflows'))
+            ->where($db->qn('id') . ' = ' . (int)$workflowID);
 
-		$db->setQuery($query);
+        $db->setQuery($query);
 
-		try
-		{
-			$result = $db->loadAssoc();
-		}
-		catch (\RuntimeException $e)
-		{
-			Factory::getApplication()->enqueueMessage($e->getMessage(), 'error');
+        try {
+            $result = $db->loadAssoc();
+        } catch (\RuntimeException $e) {
+            Factory::getApplication()->enqueueMessage($e->getMessage(), 'error');
 
-			return false;
-		}
+            return false;
+        }
 
-		$result['transitions'] = $this->getTransitions($workflowID) ?: [];
+        $result['transitions'] = $this->getTransitions($workflowID) ?: [];
+        $result['stages'] = $this->getStages($workflowID) ?: [];
 
-		return $result;
-	}
+        return $result;
+    }
 
-	/**
-	 * Collect all transitions of a workflow with the stages they combine.
-	 *
-	 * @param int $workflowID
-	 *
-	 * @return array|boolean
-	 *
-	 * @since 4.0
-	 */
-	public function getTransitions($workflowID)
-	{
-		$db    = Factory::getDbo();
-		$query = $db->getQuery(true);
-		$query->select($db->qn(['t.id', 't.title']))
-			->select($db->qn(['from_s.id', 'from_s.title', 'from_s.condition', 'from_s.default'],
-				['from_id', 'from_title', 'from_condition', 'from_default']))
-			->select($db->qn(['to_s.id', 'to_s.title', 'to_s.condition', 'to_s.default'],
-				['to_id', 'to_title', 'to_condition', 'to_default']))
-			->from($db->qn('#__workflow_transitions', 't'))
-			->leftJoin($db->qn('#__workflow_stages',
-					'from_s') . ' ON ' . $db->qn('from_s.id') . ' = ' . $db->qn('t.from_stage_id'))
-			->leftJoin($db->qn('#__workflow_stages',
-					'to_s') . ' ON ' . $db->qn('to_s.id') . ' = ' . $db->qn('t.to_stage_id'))
-			->where($db->qn('t.workflow_id') . ' = ' . (int) $workflowID);
+    /**
+     * Collect all transitions of a workflow with the stages they combine.
+     *
+     * @param int $workflowID
+     *
+     * @return array|boolean
+     *
+     * @since 4.0
+     * @throws \Exception
+     */
+    public function getTransitions($workflowID)
+    {
+        $db = Factory::getDbo();
+        $query = $db->getQuery(true);
+        $query->select($db->qn(['t.id', 't.title']))
+            ->select($db->qn(['from_s.id', 'from_s.title', 'from_s.condition', 'from_s.default'],
+                ['from_id', 'from_title', 'from_condition', 'from_default']))
+            ->select($db->qn(['to_s.id', 'to_s.title', 'to_s.condition', 'to_s.default'],
+                ['to_id', 'to_title', 'to_condition', 'to_default']))
+            ->from($db->qn('#__workflow_transitions', 't'))
+            ->leftJoin($db->qn('#__workflow_stages',
+                    'from_s') . ' ON ' . $db->qn('from_s.id') . ' = ' . $db->qn('t.from_stage_id'))
+            ->leftJoin($db->qn('#__workflow_stages',
+                    'to_s') . ' ON ' . $db->qn('to_s.id') . ' = ' . $db->qn('t.to_stage_id'))
+            ->where($db->qn('t.workflow_id') . ' = ' . (int)$workflowID);
 
-		$db->setQuery($query);
+        $db->setQuery($query);
 
-		try
-		{
-			$result = $db->loadAssocList('id');
-		}
-		catch (\RuntimeException $e)
-		{
-			Factory::getApplication()->enqueueMessage($e->getMessage(), 'error');
+        try {
+            $result = $db->loadAssocList();
+        } catch (\RuntimeException $e) {
+            Factory::getApplication()->enqueueMessage($e->getMessage(), 'error');
 
-			return false;
-		}
+            return false;
+        }
 
-		return $result;
-	}
+        return $result;
+    }
+
+    /**
+     * Collect all stages of a workflow.
+     *
+     * @param int $workflowID
+     *
+     * @return array|boolean
+     *
+     * @since 4.0
+     * @throws \Exception
+     */
+    public function getStages($workflowID)
+    {
+        $db = Factory::getDbo();
+        $query = $db->getQuery(true);
+        $query->select($db->qn(['id', 'title', 'published', 'condition', 'default']))
+            ->from($db->qn('#__workflow_stages'))
+            ->where($db->qn('workflow_id') . ' = ' . (int)$workflowID);
+        $db->setQuery($query);
+
+        try {
+            $result = $db->loadAssocList();
+        } catch (\RuntimeException $e) {
+            Factory::getApplication()->enqueueMessage($e->getMessage(), 'error');
+
+            return false;
+        }
+
+        return $result;
+    }
 }

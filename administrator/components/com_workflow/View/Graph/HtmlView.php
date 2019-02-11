@@ -11,7 +11,6 @@ namespace Joomla\Component\Workflow\Administrator\View\Graph;
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 
 /**
@@ -58,10 +57,6 @@ class HtmlView extends BaseHtmlView
 		$this->workflow   = $this->get('Item');
 		$this->workflowID = $this->workflow['id'];
 		$this->extension  = $this->workflow['extension'];
-
-        HTMLHelper::_('script', 'media/vendor/raphael/js/raphael.min.js', array('version' => 'auto', 'relative' => false));
-        HTMLHelper::_('script', 'media/vendor/graphdracula/js/dracula.min.js', array('version' => 'auto', 'relative' => false));
-        HTMLHelper::_('script', 'com_workflow/workflow-graph.js', ['version' => 'auto', 'relative' => true]);
 
 		return parent::display($tpl);
 	}
