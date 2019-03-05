@@ -395,10 +395,9 @@
         "name": "mxgraph",
         "licenseFilename": "LICENSE",
         "js": {
-          "javascript/mxClient.min.js": "js/mxClient.min.js"
-          "javascript/dist/js/mxConstants.min.js": "js/mxConstants.js"
-        },
-        "dependencies": []
+          "javascript/mxClient.min.js": "js/mxClient.min.js",
+          "javascript/dist/js/util/mxConstants.js": "js/util/mxConstants.js"
+        }
       }
     },
     "errorPages": {
