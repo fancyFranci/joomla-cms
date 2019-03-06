@@ -14,12 +14,10 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
 
-Factory::getDocument()->addScriptOptions('workflow_graph', ['workflow' => $this->workflow]);
+Factory::getApplication()->getDocument()->addScriptOptions('workflow_graph', ['workflow' => $this->workflow]);
 
-HTMLHelper::_('script', 'media/vendor/mxgraph/js/mxClient.min.js', array('version' => 'auto', 'relative' => false));
+HTMLHelper::_('script', 'media/vendor/mxgraph/js/mxClient.min.js', ['version' => 'auto', 'relative' => false]);
 HTMLHelper::_('script', 'com_workflow/workflow-mxgraph.js', ['version' => 'auto', 'relative' => true]);
-
 ?>
 
-<!-- workflow-graph></workflow-graph -->
-<div id="paper"></div>
+<div id="container"></div>

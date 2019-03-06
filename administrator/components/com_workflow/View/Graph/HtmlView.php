@@ -12,6 +12,7 @@ namespace Joomla\Component\Workflow\Administrator\View\Graph;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
+use Joomla\CMS\Language\Text;
 
 /**
  * Workflows view class for displaying the workflow.
@@ -57,6 +58,11 @@ class HtmlView extends BaseHtmlView
 		$this->workflow   = $this->get('Item');
 		$this->workflowID = $this->workflow['id'];
 		$this->extension  = $this->workflow['extension'];
+
+		Text::script('JPUBLISHED');
+		Text::script('JUNPUBLISHED');
+		Text::script('JARCHIVED');
+		Text::script('JTRASHED');
 
 		return parent::display($tpl);
 	}
