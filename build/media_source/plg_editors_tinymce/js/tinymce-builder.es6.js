@@ -3,9 +3,7 @@
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-Joomla = window.Joomla || {};
-
-((Joomla, window, document) => {
+((Joomla, dragula, window) => {
   'use strict';
 
   /**
@@ -190,9 +188,7 @@ Joomla = window.Joomla || {};
       tinymce.langCode = code;
       tinymce.langStrings = strings || {};
     },
-    translate: (string) => {
-      return tinymce.langStrings[string] || string;
-    },
+    translate: string => tinymce.langStrings[string] || string,
     showIcon: (name) => {
       const iconname = tinymce.iconsmap[name] || name;
       return tinymce.icons[iconname] || tinymce.icons[name] || name;
@@ -201,12 +197,20 @@ Joomla = window.Joomla || {};
 
   window.tinymce = tinymce;
 
+  /**
+   * @param {HTMLElement} container
+   * @param {Object} options
+   * @param {array} options.formControl
+   * @param {array} options.toolbarPreset
+   * @param {array} options.menus
+   * @param {array} options.buttons
+   * @constructor
+   */
   const TinyMCEBuilder = (container, options) => {
-    const $sourceMenu = container.querySelector('.timymce-builder-menu.source');
-    const $sourceToolbar = container.querySelector('.timymce-builder-toolbar.source');
-
-    const $targetMenu = container.querySelectorAll('.timymce-builder-menu.target');
-    const $targetToolbar = container.querySelectorAll('.timymce-builder-toolbar.target');
+    const sourceMenu = container.querySelector('.timymce-builder-menu.source');
+    const sourceToolbar = container.querySelector('.timymce-builder-toolbar.source');
+    const targetMenu = container.querySelectorAll('.timymce-builder-menu.target');
+    const targetToolbar = container.querySelectorAll('.timymce-builder-toolbar.target');
 
     /**
      * Append input to the button item
@@ -220,9 +224,7 @@ Joomla = window.Joomla || {};
       const name = `${options.formControl}[${set}][${group}][]`;
       const value = element.getAttribute('data-name');
 
-      const input = `<input type="hidden" name="${name}" value="${value}">`;
-
-      element.innerHTML += input;
+      element.innerHTML += `<input type="hidden" name="${name}" value="${value}">`;
     };
 
     /**
@@ -231,14 +233,12 @@ Joomla = window.Joomla || {};
      * @param {Object} info
      * @param {String} type
      *
-     * @return {jQuery}
+     * @return {string}
      *
      * @since  3.7.0
      */
     const createButton = (name, info, type) => {
-
       const title = tinymce.translate(info.label);
-
       let content = '';
       let bclass = 'tox-mbtn';
 
@@ -246,19 +246,17 @@ Joomla = window.Joomla || {};
         content = title;
       } else if (info.text) {
         const text = tinymce.translate(info.text);
-
         bclass += ' tox-tbtn--bespoke';
 
         const chevron = tinymce.showIcon('chevron-down');
-
-        content = info.text !== '|' ? `<span class="tox-tbtn__select-label">${text}</span><div class="tox-tbtn__select-chevron">${chevron}</div>` : text;
+        content = info.text !== '|'
+          ? `<span class="tox-tbtn__select-label">${text}</span><div class="tox-tbtn__select-chevron">${chevron}</div>`
+          : text;
       } else {
         content = tinymce.showIcon(name);
       }
 
-      const $btn = `<button type="button" data-name="${name}" class="${bclass}" data-toggle="tooltip" title="${title}">${content}</button>`;
-
-      return $btn;
+      return `<button type="button" data-name="${name}" class="${bclass}" data-toggle="tooltip" title="${title}">${content}</button>`;
     };
 
     /**
@@ -266,8 +264,8 @@ Joomla = window.Joomla || {};
      *
      * @param {HTMLElement} box        The toolbar container
      * @param {String}      type       The type toolbar or menu
-     * @param {Array|null}  value      The value
-     * @param {Boolean}     withInput  Whether append input
+     * @param {Array|null}  [val]        The value
+     * @param {Boolean}     [withInput]  Whether append input
      *
      * @since  3.7.0
      */
@@ -276,50 +274,42 @@ Joomla = window.Joomla || {};
       const set = box.getAttribute('data-set');
       const items = type === 'menu' ? options.menus : options.buttons;
       const value = val || JSON.parse(box.getAttribute('data-value')) || [];
-      let item;
-      let name;
-      let $btn;
 
-      for (let i = 0, l = value.length; i < l; i = i + 1) {
-        name = value[i];
-        item = items[name];
-
+      value.forEach((name) => {
+        const item = items[name];
         if (!item) {
-          continue;
+          return;
         }
 
-        $btn = createButton(name, item, type);
-        box.innerHTML += $btn;
+        box.innerHTML += createButton(name, item, type);
 
-        const newbutton = box.querySelector('.tox-mbtn:last-child');
+        const newButton = box.querySelector('.tox-mbtn:last-child');
 
         // Enable tooltip
-        if (newbutton.tooltip) {
-          newbutton.tooltip({ trigger: 'hover' });
+        if (newButton.tooltip) {
+          newButton.tooltip({ trigger: 'hover' });
         }
 
         // Add input
         if (withInput) {
-          appendInput(newbutton, group, set);
+          appendInput(newButton, group, set);
         }
-      }
+      });
     };
 
     /**
      * Clear the pane for specific set
-     * @param {Object} options Options {set: 1}
+     * @param {Object} attributes Options {set: 1}
      */
-    const clearPane = (options) => {
-      const set = options.set;
-
-      $targetMenu.forEach((elem) => {
-        if (elem.getAttribute('data-set') === set) {
+    const clearPane = (attributes) => {
+      targetMenu.forEach((elem) => {
+        if (elem.getAttribute('data-set') === attributes.set) {
           elem.innerHTML = '';
         }
       });
 
-      $targetToolbar.forEach((elem) => {
-        if (elem.getAttribute('data-set') === set) {
+      targetToolbar.forEach((elem) => {
+        if (elem.getAttribute('data-set') === attributes.set) {
           elem.innerHTML = '';
         }
       });
@@ -330,197 +320,171 @@ Joomla = window.Joomla || {};
      * @param {Object} attrib Options {set: 1, preset: 'presetName'}
      */
     const setPreset = (attrib) => {
-      const set = attrib.set;
       const preset = options.toolbarPreset[attrib.preset] || null;
 
       if (!preset) {
-        throw new Error('Unknown Preset "' + attrib.preset + '"');
+        throw new Error(`Unknown Preset "${attrib.preset}"`);
       }
 
       clearPane(attrib);
 
-      for (let group in preset) {
-        if (!preset.hasOwnProperty(group)) {
-          continue;
-        }
-
+      Object.keys(preset).forEach((group) => {
         const type = group === 'menu' ? 'menu' : 'toolbar';
 
         // Find correct container for current set
         if (group === 'menu') {
-          $targetMenu.forEach((target) => {
-            if (target.getAttribute('data-group') === group && target.getAttribute('data-set') === set)
-            {
+          targetMenu.forEach((target) => {
+            if (target.getAttribute('data-group') === group
+              && target.getAttribute('data-set') === attrib.set) {
               renderBar(target, type, preset[group], true);
             }
           });
         } else {
-          $targetToolbar.forEach((target) => {
-            if (target.getAttribute('data-group') === group && target.getAttribute('data-set') === set)
-            {
+          targetToolbar.forEach((target) => {
+            if (target.getAttribute('data-group') === group
+              && target.getAttribute('data-set') === attrib.set) {
               renderBar(target, type, preset[group], true);
             }
           });
         }
-      }
+      });
     };
 
     // Build menu + toolbar
-    renderBar($sourceMenu, 'menu');
-    renderBar($sourceToolbar, 'toolbar');
+    renderBar(sourceMenu, 'menu');
+    renderBar(sourceToolbar, 'toolbar');
 
     // Initialize drag & drop
-    const drakeMenu = dragula([$sourceMenu], {
-      copy: (el, source) => {
-        return source === $sourceMenu
-      },
-      accepts: (el, target) => {
-        return target !== $sourceMenu
-      },
-      removeOnSpill: true
-    }).on('drag', () => {
-      $targetMenu.forEach((target) => {
-        target.classList.add('drop-area-highlight');
+    const drakeMenu = dragula([sourceMenu], {
+      copy: (el, source) => source === sourceMenu,
+      accepts: (el, target) => target !== sourceMenu,
+      removeOnSpill: true,
+    })
+      .on('drag', () => {
+        targetMenu.forEach((target) => {
+          target.classList.add('drop-area-highlight');
+        });
+      })
+      .on('dragend', () => {
+        targetMenu.forEach((target) => {
+          target.classList.remove('drop-area-highlight');
+        });
+      })
+      .on('drop', (el, target) => {
+        if (target !== sourceMenu) {
+          appendInput(el, target.getAttribute('data-group'), target.getAttribute('data-set'));
+        }
       });
-    }).on('dragend', () => {
-      $targetMenu.forEach((target) => {
-        target.classList.remove('drop-area-highlight');
-      });
-    }).on('drop', (el, target) => {
-      if (target !== $sourceMenu) {
-        appendInput(el, target.getAttribute('data-group'), target.getAttribute('data-set'));
-      }
-    });
 
-    $targetMenu.forEach((target) => {
+    targetMenu.forEach((target) => {
       renderBar(target, 'menu', null, true);
       drakeMenu.containers.push(target);
     });
 
-    const drakeToolbar = dragula([$sourceToolbar], {
-      copy: (el, source) => {
-        return source === $sourceToolbar
-      },
-      accepts: (el, target) => {
-        return target !== $sourceToolbar
-      },
+    const drakeToolbar = dragula([sourceToolbar], {
+      copy: (el, source) => source === sourceToolbar,
+      accepts: (el, target) => target !== sourceToolbar,
       removeOnSpill: true,
-    }).on('drag', () => {
-      $targetToolbar.forEach((target) => {
-        target.classList.add('drop-area-highlight');
+    })
+      .on('drag', () => {
+        targetToolbar.forEach((target) => {
+          target.classList.add('drop-area-highlight');
+        });
+      })
+      .on('dragend', () => {
+        targetToolbar.forEach((target) => {
+          target.classList.remove('drop-area-highlight');
+        });
+      })
+      .on('drop', (el, target) => {
+        if (target !== sourceToolbar) {
+          appendInput(el, target.getAttribute('data-group'), target.getAttribute('data-set'));
+        }
       });
-    }).on('dragend', () => {
-      $targetToolbar.forEach((target) => {
-        target.classList.remove('drop-area-highlight');
-      });
-    }).on('drop', (el, target) => {
-      if (target !== $sourceToolbar) {
-        appendInput(el, target.getAttribute('data-group'), target.getAttribute('data-set'));
-      }
-    });
 
-    $targetToolbar.forEach((target) => {
+    targetToolbar.forEach((target) => {
       renderBar(target, 'toolbar', null, true);
       drakeToolbar.containers.push(target);
     });
 
     // Bind actions buttons
     const actionButtons = container.querySelectorAll('.button-action');
-
-    actionButtons.forEach((elem) => {
-      elem.addEventListener('click', (event) => {
+    actionButtons.forEach((button) => {
+      button.addEventListener('click', (event) => {
         const action = event.target.getAttribute('data-action');
+        const attributes = {};
 
-        let options = {};
-
-        [].forEach.call(event.target.attributes, function (attrib) {
+        event.target.attributes.forEach((attrib) => {
           if (/^data-/.test(attrib.name)) {
-            let key = attrib.name.substr(5);
-
-            options[key] = attrib.value;
+            attributes[attrib.name.substr(5)] = attrib.value;
           }
         });
 
         // Don't allow wild function calling
-        switch (action)
-        {
+        switch (action) {
           case 'clearPane':
-            clearPane(options);
+            clearPane(attributes);
             break;
 
           case 'setPreset':
-            setPreset(options);
+            setPreset(attributes);
             break;
 
           default:
-            throw new Error('Unsupported action ' + action);
+            throw new Error(`Unsupported action ${action}`);
         }
       });
     });
   };
 
-  Joomla.TinyMCEBuilder = TinyMCEBuilder;
+  document.addEventListener('DOMContentLoaded', () => {
+    const builder = document.getElementById('joomla-tinymce-builder');
+    const options = Joomla.getOptions ? Joomla.getOptions('plg_editors_tinymce_builder', {})
+      : (Joomla.optionsStorage.plg_editors_tinymce_builder || {});
 
-})(Joomla, window, document);
+    Joomla.TinyMCEBuilder = new TinyMCEBuilder(builder, options);
 
-document.addEventListener('DOMContentLoaded', () => {
-  const options = Joomla.getOptions ? Joomla.getOptions('plg_editors_tinymce_builder', {})
-          : (Joomla.optionsStorage.plg_editors_tinymce_builder || {});
+    // Allow to select the group only once per the set
+    // @TODO: implement when https://github.com/joomla/joomla-cms/pull/24211 is merged
+    const toggleAvailableOption = () => {
+      //      $accessSelects.find('option[disabled]').removeAttr('disabled');
+      //
+      //      // Disable already selected options
+      //      $accessSelects.each(function () {
+      //        var $select = $(this), val = $select.val() || [], query = [],
+      //                $options = $accessSelects.not(this).find('option');
+      //
+      //        for (var i = 0, l = val.length; i < l; i++) {
+      //          if (!val[i])
+      //            continue;
+      //          query.push('[value="' + val[i] + '"]');
+      //        }
+      //
+      //        if (query.length) {
+      //          $options.filter(query.join(',')).attr('disabled', 'disabled');
+      //        }
+      //      });
+      //
+      //      // Update Chosen
+      //      $accessSelects.trigger('chosen:updated');
+    };
 
-  const builder = document.getElementById('joomla-tinymce-builder');
-
-  Joomla.TinyMCEBuilder(builder, options);
-
-  const selects = builder.querySelectorAll('.access-select');
-
-  // Allow to select the group only once per the set
-  // @TODO: implement when https://github.com/joomla/joomla-cms/pull/24211 is merged
-  const toggleAvailableOption = () => {
-//      $accessSelects.find('option[disabled]').removeAttr('disabled');
-//
-//      // Disable already selected options
-//      $accessSelects.each(function () {
-//        var $select = $(this), val = $select.val() || [], query = [],
-//                $options = $accessSelects.not(this).find('option');
-//
-//        for (var i = 0, l = val.length; i < l; i++) {
-//          if (!val[i])
-//            continue;
-//          query.push('[value="' + val[i] + '"]');
-//        }
-//
-//        if (query.length) {
-//          $options.filter(query.join(',')).attr('disabled', 'disabled');
-//        }
-//      });
-//
-//      // Update Chosen
-//      $accessSelects.trigger('chosen:updated');
-  };
-
-  toggleAvailableOption();
-
-  // Allow to select the group only once per the set
-  selects.forEach((select) => {
-    select.addEventListener('change', (event) => {
-      toggleAvailableOption();
+    // Allow to select the group only once per the set
+    const selects = builder.querySelectorAll('.access-select');
+    selects.forEach((select) => {
+      select.addEventListener('change', toggleAvailableOption);
     });
   });
+})(Joomla, dragula, window);
 
+/** Init builder tabs */
+(($) => {
+  'use strict';
 
-});
-
-;
-(function ($) {
-  "use strict";
-
-  // Init the builder
-  $(document).ready(function () {
-
-    $("#set-tabs a").on('click', function (event) {
+  $(document).ready(() => {
+    $('#set-tabs a').on('click', (event) => {
       event.preventDefault();
-      $(this).tab("show");
+      $(this).tab('show');
     });
-
   });
-}(jQuery));
+})(jQuery);
