@@ -198,19 +198,34 @@
   window.tinymce = tinymce;
 
   /**
-   * @param {HTMLElement} container
-   * @param {Object} options
-   * @param {array} options.formControl
-   * @param {array} options.toolbarPreset
-   * @param {array} options.menus
-   * @param {array} options.buttons
-   * @constructor
+   * Build your own TinyMCE toolbars and menus
    */
-  const TinyMCEBuilder = (container, options) => {
-    const sourceMenu = container.querySelector('.timymce-builder-menu.source');
-    const sourceToolbar = container.querySelector('.timymce-builder-toolbar.source');
-    const targetMenu = container.querySelectorAll('.timymce-builder-menu.target');
-    const targetToolbar = container.querySelectorAll('.timymce-builder-toolbar.target');
+  class TinyMCEBuilder {
+    /**
+     * @constructor
+     *
+     * @param {HTMLElement} container
+     * @param {Object} options
+     * @param {array} options.formControl
+     * @param {array} options.toolbarPreset
+     * @param {array} options.menus
+     * @param {array} options.buttons
+     */
+    constructor(container, options) {
+      this.options = options;
+      this.container = container;
+      this.sourceMenu = this.container.querySelector('.timymce-builder-menu.source');
+      this.sourceToolbar = this.container.querySelector('.timymce-builder-toolbar.source');
+      this.targetMenu = this.container.querySelectorAll('.timymce-builder-menu.target');
+      this.targetToolbar = this.container.querySelectorAll('.timymce-builder-toolbar.target');
+
+      // Build menu + toolbar
+      this.renderBar(this.sourceMenu, 'menu');
+      this.renderBar(this.sourceToolbar, 'toolbar');
+
+      this.initDragnDrop();
+      this.bindActionButtons();
+    }
 
     /**
      * Append input to the button item
@@ -220,12 +235,12 @@
      *
      * @since  3.7.0
      */
-    const appendInput = (element, group, set) => {
-      const name = `${options.formControl}[${set}][${group}][]`;
+    appendInput(element, group, set) {
+      const name = `${this.options.formControl}[${set}][${group}][]`;
       const value = element.getAttribute('data-name');
 
       element.innerHTML += `<input type="hidden" name="${name}" value="${value}">`;
-    };
+    }
 
     /**
      * Create the element needed for renderBar()
@@ -237,16 +252,16 @@
      *
      * @since  3.7.0
      */
-    const createButton = (name, info, type) => {
+    static createButton(name, info, type) {
       const title = tinymce.translate(info.label);
       let content = '';
-      let bclass = 'tox-mbtn';
+      let bClass = 'tox-mbtn';
 
       if (type === 'menu') {
         content = title;
       } else if (info.text) {
         const text = tinymce.translate(info.text);
-        bclass += ' tox-tbtn--bespoke';
+        bClass += ' tox-tbtn--bespoke';
 
         const chevron = tinymce.showIcon('chevron-down');
         content = info.text !== '|'
@@ -256,23 +271,23 @@
         content = tinymce.showIcon(name);
       }
 
-      return `<button type="button" data-name="${name}" class="${bclass}" data-toggle="tooltip" title="${title}">${content}</button>`;
-    };
+      return `<button type="button" data-name="${name}" class="${bClass}" data-toggle="tooltip" title="${title}">${content}</button>`;
+    }
 
     /**
      * Render the toolbar/menubar
      *
-     * @param {HTMLElement} box        The toolbar container
-     * @param {String}      type       The type toolbar or menu
-     * @param {Array|null}  [val]        The value
-     * @param {Boolean}     [withInput]  Whether append input
+     * @param {HTMLElement|Node} box          The toolbar container
+     * @param {String}           type         The type toolbar or menu
+     * @param {Array|null}       [val]        The value
+     * @param {Boolean}          [withInput]  Whether append input
      *
      * @since  3.7.0
      */
-    const renderBar = (box, type, val, withInput) => {
+    renderBar(box, type, val, withInput) {
       const group = box.getAttribute('data-group');
       const set = box.getAttribute('data-set');
-      const items = type === 'menu' ? options.menus : options.buttons;
+      const items = type === 'menu' ? this.options.menus : this.options.buttons;
       const value = val || JSON.parse(box.getAttribute('data-value')) || [];
 
       value.forEach((name) => {
@@ -281,7 +296,7 @@
           return;
         }
 
-        box.innerHTML += createButton(name, item, type);
+        box.innerHTML += TinyMCEBuilder.createButton(name, item, type);
 
         const newButton = box.querySelector('.tox-mbtn:last-child');
 
@@ -292,159 +307,158 @@
 
         // Add input
         if (withInput) {
-          appendInput(newButton, group, set);
+          this.appendInput(newButton, group, set);
         }
       });
-    };
+    }
 
     /**
      * Clear the pane for specific set
      * @param {Object} attributes Options {set: 1}
      */
-    const clearPane = (attributes) => {
-      targetMenu.forEach((elem) => {
+    clearPane(attributes) {
+      this.targetMenu.forEach((elem) => {
         if (elem.getAttribute('data-set') === attributes.set) {
           elem.innerHTML = '';
         }
       });
 
-      targetToolbar.forEach((elem) => {
+      this.targetToolbar.forEach((elem) => {
         if (elem.getAttribute('data-set') === attributes.set) {
           elem.innerHTML = '';
         }
       });
-    };
+    }
 
     /**
-     * Set Selected preset to specific  set
+     * Set selected preset to specific set
      * @param {Object} attrib Options {set: 1, preset: 'presetName'}
      */
-    const setPreset = (attrib) => {
-      const preset = options.toolbarPreset[attrib.preset] || null;
+    setPreset(attrib) {
+      const preset = this.options.toolbarPreset[attrib.preset] || null;
 
       if (!preset) {
         throw new Error(`Unknown Preset "${attrib.preset}"`);
       }
 
-      clearPane(attrib);
+      this.clearPane(attrib);
 
       Object.keys(preset).forEach((group) => {
         const type = group === 'menu' ? 'menu' : 'toolbar';
 
         // Find correct container for current set
         if (group === 'menu') {
-          targetMenu.forEach((target) => {
+          this.targetMenu.forEach((target) => {
             if (target.getAttribute('data-group') === group
-              && target.getAttribute('data-set') === attrib.set) {
-              renderBar(target, type, preset[group], true);
+                && target.getAttribute('data-set') === attrib.set) {
+              this.renderBar(target, type, preset[group], true);
             }
           });
         } else {
-          targetToolbar.forEach((target) => {
+          this.targetToolbar.forEach((target) => {
             if (target.getAttribute('data-group') === group
-              && target.getAttribute('data-set') === attrib.set) {
-              renderBar(target, type, preset[group], true);
+                && target.getAttribute('data-set') === attrib.set) {
+              this.renderBar(target, type, preset[group], true);
             }
           });
         }
       });
-    };
+    }
 
-    // Build menu + toolbar
-    renderBar(sourceMenu, 'menu');
-    renderBar(sourceToolbar, 'toolbar');
-
-    // Initialize drag & drop
-    const drakeMenu = dragula([sourceMenu], {
-      copy: (el, source) => source === sourceMenu,
-      accepts: (el, target) => target !== sourceMenu,
-      removeOnSpill: true,
-    })
-      .on('drag', () => {
-        targetMenu.forEach((target) => {
+    /**
+     * Set drag&drop on source and target menus/toolbars with Dragula
+     */
+    initDragnDrop() {
+      const drakeMenu = dragula([this.sourceMenu], {
+        copy: (el, source) => source === this.sourceMenu,
+        accepts: (el, target) => target !== this.sourceMenu,
+        removeOnSpill: true,
+      }).on('drag', () => {
+        this.targetMenu.forEach((target) => {
           target.classList.add('drop-area-highlight');
         });
-      })
-      .on('dragend', () => {
-        targetMenu.forEach((target) => {
+      }).on('dragend', () => {
+        this.targetMenu.forEach((target) => {
           target.classList.remove('drop-area-highlight');
         });
-      })
-      .on('drop', (el, target) => {
-        if (target !== sourceMenu) {
-          appendInput(el, target.getAttribute('data-group'), target.getAttribute('data-set'));
+      }).on('drop', (el, target) => {
+        if (target !== this.sourceMenu) {
+          this.appendInput(el, target.getAttribute('data-group'), target.getAttribute('data-set'));
         }
       });
 
-    targetMenu.forEach((target) => {
-      renderBar(target, 'menu', null, true);
-      drakeMenu.containers.push(target);
-    });
+      this.targetMenu.forEach((target) => {
+        this.renderBar(target, 'menu', null, true);
+        drakeMenu.containers.push(target);
+      });
 
-    const drakeToolbar = dragula([sourceToolbar], {
-      copy: (el, source) => source === sourceToolbar,
-      accepts: (el, target) => target !== sourceToolbar,
-      removeOnSpill: true,
-    })
-      .on('drag', () => {
-        targetToolbar.forEach((target) => {
+      const drakeToolbar = dragula([this.sourceToolbar], {
+        copy: (el, source) => source === this.sourceToolbar,
+        accepts: (el, target) => target !== this.sourceToolbar,
+        removeOnSpill: true,
+      }).on('drag', () => {
+        this.targetToolbar.forEach((target) => {
           target.classList.add('drop-area-highlight');
         });
-      })
-      .on('dragend', () => {
-        targetToolbar.forEach((target) => {
+      }).on('dragend', () => {
+        this.targetToolbar.forEach((target) => {
           target.classList.remove('drop-area-highlight');
         });
-      })
-      .on('drop', (el, target) => {
-        if (target !== sourceToolbar) {
-          appendInput(el, target.getAttribute('data-group'), target.getAttribute('data-set'));
+      }).on('drop', (el, target) => {
+        if (target !== this.sourceToolbar) {
+          this.appendInput(el, target.getAttribute('data-group'), target.getAttribute('data-set'));
         }
       });
 
-    targetToolbar.forEach((target) => {
-      renderBar(target, 'toolbar', null, true);
-      drakeToolbar.containers.push(target);
-    });
+      this.targetToolbar.forEach((target) => {
+        this.renderBar(target, 'toolbar', null, true);
+        drakeToolbar.containers.push(target);
+      });
+    }
 
-    // Bind actions buttons
-    const actionButtons = container.querySelectorAll('.button-action');
-    actionButtons.forEach((button) => {
-      button.addEventListener('click', (event) => {
-        const action = event.target.getAttribute('data-action');
-        const attributes = {};
+    /**
+     * Add event listeners on action buttons, depending on their data-action
+     */
+    bindActionButtons() {
+      const actionButtons = this.container.querySelectorAll('.button-action');
+      actionButtons.forEach((button) => {
+        button.addEventListener('click', (event) => {
+          const action = event.target.getAttribute('data-action');
+          const attributes = {};
 
-        event.target.attributes.forEach((attrib) => {
-          if (/^data-/.test(attrib.name)) {
-            attributes[attrib.name.substr(5)] = attrib.value;
+          event.target.attributes.forEach((attrib) => {
+            if (attrib.name.indexOf('data') === 0) {
+              attributes[attrib.name.substr(5)] = attrib.value;
+            }
+          });
+
+          // Don't allow wild function calling
+          switch (action) {
+            case 'clearPane':
+              this.clearPane(attributes);
+              break;
+            case 'setPreset':
+              this.setPreset(attributes);
+              break;
+            default:
+              throw new Error(`Unsupported action ${action}`);
           }
         });
-
-        // Don't allow wild function calling
-        switch (action) {
-          case 'clearPane':
-            clearPane(attributes);
-            break;
-
-          case 'setPreset':
-            setPreset(attributes);
-            break;
-
-          default:
-            throw new Error(`Unsupported action ${action}`);
-        }
       });
-    });
-  };
+    }
+  }
 
+  /**
+   * Create TinyMCEBuilder
+   */
   document.addEventListener('DOMContentLoaded', () => {
     const builder = document.getElementById('joomla-tinymce-builder');
-    const options = Joomla.getOptions ? Joomla.getOptions('plg_editors_tinymce_builder', {})
+    const options = Joomla.getOptions
+      ? Joomla.getOptions('plg_editors_tinymce_builder', {})
       : (Joomla.optionsStorage.plg_editors_tinymce_builder || {});
 
     Joomla.TinyMCEBuilder = new TinyMCEBuilder(builder, options);
 
-    // Allow to select the group only once per the set
     // @TODO: implement when https://github.com/joomla/joomla-cms/pull/24211 is merged
     const toggleAvailableOption = () => {
       //      $accessSelects.find('option[disabled]').removeAttr('disabled');
@@ -469,7 +483,7 @@
       //      $accessSelects.trigger('chosen:updated');
     };
 
-    // Allow to select the group only once per the set
+    // Allow to select the group only once per set
     const selects = builder.querySelectorAll('.access-select');
     selects.forEach((select) => {
       select.addEventListener('change', toggleAvailableOption);
