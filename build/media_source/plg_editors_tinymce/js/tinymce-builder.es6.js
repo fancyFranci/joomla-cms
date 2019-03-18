@@ -317,13 +317,13 @@
      * @param {Object} attributes Options {set: 1}
      */
     clearPane(attributes) {
-      this.targetMenu.forEach((elem) => {
+      Array.prototype.forEach.call(this.targetMenu, (elem) => {
         if (elem.getAttribute('data-set') === attributes.set) {
           elem.innerHTML = '';
         }
       });
 
-      this.targetToolbar.forEach((elem) => {
+      Array.prototype.forEach.call(this.targetToolbar, (elem) => {
         if (elem.getAttribute('data-set') === attributes.set) {
           elem.innerHTML = '';
         }
@@ -348,14 +348,14 @@
 
         // Find correct container for current set
         if (group === 'menu') {
-          this.targetMenu.forEach((target) => {
+          Array.prototype.forEach.call(this.targetMenu, (target) => {
             if (target.getAttribute('data-group') === group
                 && target.getAttribute('data-set') === attrib.set) {
               this.renderBar(target, type, preset[group], true);
             }
           });
         } else {
-          this.targetToolbar.forEach((target) => {
+          Array.prototype.forEach.call(this.targetToolbar, (target) => {
             if (target.getAttribute('data-group') === group
                 && target.getAttribute('data-set') === attrib.set) {
               this.renderBar(target, type, preset[group], true);
@@ -374,11 +374,11 @@
         accepts: (el, target) => target !== this.sourceMenu,
         removeOnSpill: true,
       }).on('drag', () => {
-        this.targetMenu.forEach((target) => {
+        Array.prototype.forEach.call(this.targetMenu, (target) => {
           target.classList.add('drop-area-highlight');
         });
       }).on('dragend', () => {
-        this.targetMenu.forEach((target) => {
+        Array.prototype.forEach.call(this.targetMenu, (target) => {
           target.classList.remove('drop-area-highlight');
         });
       }).on('drop', (el, target) => {
@@ -387,7 +387,7 @@
         }
       });
 
-      this.targetMenu.forEach((target) => {
+      Array.prototype.forEach.call(this.targetMenu, (target) => {
         this.renderBar(target, 'menu', null, true);
         drakeMenu.containers.push(target);
       });
@@ -397,11 +397,11 @@
         accepts: (el, target) => target !== this.sourceToolbar,
         removeOnSpill: true,
       }).on('drag', () => {
-        this.targetToolbar.forEach((target) => {
+        Array.prototype.forEach.call(this.targetToolbar, (target) => {
           target.classList.add('drop-area-highlight');
         });
       }).on('dragend', () => {
-        this.targetToolbar.forEach((target) => {
+        Array.prototype.forEach.call(this.targetToolbar, (target) => {
           target.classList.remove('drop-area-highlight');
         });
       }).on('drop', (el, target) => {
@@ -410,7 +410,7 @@
         }
       });
 
-      this.targetToolbar.forEach((target) => {
+      Array.prototype.forEach.call(this.targetToolbar, (target) => {
         this.renderBar(target, 'toolbar', null, true);
         drakeToolbar.containers.push(target);
       });
@@ -421,16 +421,19 @@
      */
     bindActionButtons() {
       const actionButtons = this.container.querySelectorAll('.button-action');
-      actionButtons.forEach((button) => {
+      Array.prototype.forEach.call(actionButtons, (button) => {
         button.addEventListener('click', (event) => {
           const action = event.target.getAttribute('data-action');
           const attributes = {};
+          let a;
 
-          event.target.attributes.forEach((attrib) => {
+          for (a = 0; a < event.target.attributes.length; a += 1) {
+            const attrib = event.target.attributes[a];
+
             if (attrib.name.indexOf('data') === 0) {
               attributes[attrib.name.substr(5)] = attrib.value;
             }
-          });
+          }
 
           // Don't allow wild function calling
           switch (action) {
@@ -485,7 +488,7 @@
 
     // Allow to select the group only once per set
     const selects = builder.querySelectorAll('.access-select');
-    selects.forEach((select) => {
+    Array.prototype.forEach.call(selects, (select) => {
       select.addEventListener('change', toggleAvailableOption);
     });
   });
@@ -498,7 +501,7 @@
   $(document).ready(() => {
     $('#set-tabs a').on('click', (event) => {
       event.preventDefault();
-      $(this).tab('show');
+      $(event.target).tab('show');
     });
   });
 })(jQuery);
