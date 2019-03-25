@@ -315,6 +315,16 @@
         "name": "codemirror",
         "licenseFilename": "LICENSE"
       },
+      "@simonwep/pickr": {
+        "name": "pickr",
+        "licenseFilename": "LICENSE",
+        "js": {
+          "dist/pickr.min.js": "js/pickr.min.js"
+        },
+        "css": {
+          "dist/pickr.min.css": "css/pickr.min.css"
+        }
+      },
       "tinymce": {
         "name": "tinymce",
         "licenseFilename": "license.txt"

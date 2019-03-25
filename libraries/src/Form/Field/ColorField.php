@@ -12,6 +12,7 @@ defined('JPATH_PLATFORM') or die;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\FormField;
+use Joomla\CMS\Language\Language;
 
 /**
  * Color Form Field class for the Joomla Platform.
@@ -31,12 +32,28 @@ class ColorField extends FormField
 	protected $type = 'Color';
 
 	/**
+	 * The colors.
+	 *
+	 * @var    mixed
+	 * @since  3.2
+	 */
+	protected $colors;
+
+	/**
 	 * The control.
 	 *
 	 * @var    mixed
 	 * @since  3.2
 	 */
 	protected $control = 'hue';
+
+	/**
+	 * Default color when there is no value.
+	 *
+	 * @var    string
+	 * @since  4.0
+	 */
+	protected $default = '#000000';
 
 	/**
 	 * The format.
@@ -47,36 +64,20 @@ class ColorField extends FormField
 	protected $format = 'hex';
 
 	/**
+	 * Possibility to select hue color value
+	 *
+	 * @var    boolean
+	 * @since  4.0
+	 */
+	protected $hue = true;
+
+	/**
 	 * The keywords (transparent,initial,inherit).
 	 *
 	 * @var    string
 	 * @since  3.6.0
 	 */
 	protected $keywords = '';
-
-	/**
-	 * The position.
-	 *
-	 * @var    mixed
-	 * @since  3.2
-	 */
-	protected $position = 'default';
-
-	/**
-	 * The colors.
-	 *
-	 * @var    mixed
-	 * @since  3.2
-	 */
-	protected $colors;
-
-	/**
-	 * The split.
-	 *
-	 * @var    integer
-	 * @since  3.2
-	 */
-	protected $split = 3;
 
 	/**
 	 * Name of the layout being used to render the field
@@ -87,9 +88,41 @@ class ColorField extends FormField
 	protected $layout = 'joomla.form.field.color';
 
 	/**
+	 * Possibility to select opacity of a color value
+	 *
+	 * @var    boolean
+	 * @since  4.0
+	 */
+	protected $opacity = true;
+
+	/**
+	 * The position.
+	 *
+	 * @var    mixed
+	 * @since  3.2
+	 */
+	protected $position = 'default';
+
+	/**
+	 * The split.
+	 *
+	 * @var    integer
+	 * @since  3.2
+	 */
+	protected $split = 3;
+
+	/**
+	 * Optional colors to select inside the color picker
+	 *
+	 * @var    array
+	 * @since  4.0
+	 */
+	protected $swatches = [];
+
+	/**
 	 * Method to get certain otherwise inaccessible properties from the form field object.
 	 *
-	 * @param   string  $name  The property name for which to get the value.
+	 * @param   string $name The property name for which to get the value.
 	 *
 	 * @return  mixed  The property value or null.
 	 *
@@ -99,11 +132,14 @@ class ColorField extends FormField
 	{
 		switch ($name)
 		{
-			case 'control':
-			case 'format':
-			case 'keywords':
-			case 'exclude':
 			case 'colors':
+			case 'control':
+			case 'default':
+			case 'exclude':
+			case 'format':
+			case 'hue':
+			case 'keywords':
+			case 'opacity':
 			case 'split':
 				return $this->$name;
 		}
@@ -114,8 +150,8 @@ class ColorField extends FormField
 	/**
 	 * Method to set certain otherwise inaccessible properties of the form field object.
 	 *
-	 * @param   string  $name   The property name for which to set the value.
-	 * @param   mixed   $value  The value of the property.
+	 * @param   string $name  The property name for which to set the value.
+	 * @param   mixed  $value The value of the property.
 	 *
 	 * @return  void
 	 *
@@ -125,20 +161,21 @@ class ColorField extends FormField
 	{
 		switch ($name)
 		{
-			case 'split':
-				$value = (int) $value;
+			case 'colors':
 			case 'control':
+			case 'default':
+			case 'exclude':
 			case 'format':
-				$this->$name = (string) $value;
-				break;
 			case 'keywords':
 				$this->$name = (string) $value;
 				break;
-			case 'exclude':
-			case 'colors':
-				$this->$name = (string) $value;
+			case 'split':
+				$this->$name = (int) $value;
 				break;
-
+			case 'hue':
+			case 'opacity':
+				$this->$name = (boolean) $value;
+				break;
 			default:
 				parent::__set($name, $value);
 		}
@@ -147,7 +184,7 @@ class ColorField extends FormField
 	/**
 	 * Method to attach a Form object to the field.
 	 *
-	 * @param   SimpleXMLElement  $element  The SimpleXMLElement object representing the `<field>` tag for the form field object.
+	 * @param   \SimpleXMLElement $element  The SimpleXMLElement object representing the `<field>` tag for the form field object.
 	 * @param   mixed             $value    The form field value to validate.
 	 * @param   string            $group    The field name group control value. This acts as an array container for the field.
 	 *                                      For example if the field has name="foo" and the group value is set to "bar" then the
@@ -164,12 +201,17 @@ class ColorField extends FormField
 
 		if ($return)
 		{
-			$this->control  = isset($this->element['control']) ? (string) $this->element['control'] : 'hue';
-			$this->format   = isset($this->element['format']) ? (string) $this->element['format'] : 'hex';
-			$this->keywords = isset($this->element['keywords']) ? (string) $this->element['keywords'] : '';
-			$this->position = isset($this->element['position']) ? (string) $this->element['position'] : 'default';
 			$this->colors   = (string) $this->element['colors'];
+			$this->control  = isset($this->element['control']) ? (string) $this->element['control'] : 'hue';
+			$this->default  = isset($this->element['default']) ? (string) $this->element['default'] : '';
+			$this->format   = isset($this->element['format']) ? (string) $this->element['format'] : 'hex';
+			$this->hue      = isset($this->element['hue']) ? (string) $this->element['hue'] : true;
+			$this->keywords = isset($this->element['keywords']) ? (string) $this->element['keywords'] : '';
+			$this->opacity  = isset($this->element['opacity']) ? (string) $this->element['opacity'] : true;
+			$this->position = isset($this->element['position']) ? (string) $this->element['position'] : 'default';
 			$this->split    = isset($this->element['split']) ? (int) $this->element['split'] : 3;
+			$this->swatches = isset($this->element['swatches']) ? explode(',', $this->element['swatches']) : [];
+			$this->value    = isset($this->element['value']) ? (string) $this->element['value'] : '';
 		}
 
 		return $return;
@@ -181,11 +223,14 @@ class ColorField extends FormField
 	 * @return  string  The field input markup.
 	 *
 	 * @since   1.7.3
+	 * @throws \Exception
 	 */
 	protected function getInput()
 	{
-		// Switch the layouts
-		$this->layout = $this->control === 'simple' ? $this->layout . '.simple' : $this->layout . '.advanced';
+		if (!empty($this->control))
+		{
+			$this->layout .= '.' . $this->control;
+		}
 
 		// Trim the trailing line in the layout file
 		return rtrim($this->getRenderer($this->layout)->render($this->getLayoutData()), PHP_EOL);
@@ -197,13 +242,15 @@ class ColorField extends FormField
 	 * @return  array
 	 *
 	 * @since 3.5
+	 * @throws \Exception
 	 */
 	protected function getLayoutData()
 	{
-		$lang  = Factory::getLanguage();
+		/* @var Language $lang */
+		$lang  = Factory::getApplication()->getLanguage();
 		$data  = parent::getLayoutData();
 		$color = strtolower($this->value);
-		$color = ! $color ? '' : $color;
+		$color = !$color ? '' : $color;
 
 		// Position of the panel can be: right (default), left, top or bottom (default RTL is left)
 		$position = ' data-position="' . (($lang->isRTL() && $this->position == 'default') ? 'left' : $this->position) . '"';
@@ -212,20 +259,29 @@ class ColorField extends FormField
 		{
 			$color = 'none';
 		}
-		elseif ($color['0'] != '#' && $this->format == 'hex')
+		elseif ($color[0] != '#' && $this->format == 'hex')
 		{
 			$color = '#' . $color;
 		}
 
-		// Assign data for simple/advanced mode
-		$controlModeData = $this->control === 'simple' ? $this->getSimpleModeLayoutData() : $this->getAdvancedModeLayoutData($lang);
+		switch ($this->control)
+		{
+			case 'simple':
+				$controlModeData = $this->getSimpleModeLayoutData();
+				break;
+			case 'advanced':
+				$controlModeData = $this->getAdvancedModeLayoutData($lang);
+				break;
+			default:
+				$controlModeData = $this->getPickerModeLayoutData($lang);
+		}
 
 		$extraData = array(
 			'color'    => $color,
 			'format'   => $this->format,
 			'keywords' => $this->keywords,
 			'position' => $position,
-			'validate' => $this->validate
+			'validate' => $this->validate,
 		);
 
 		return array_merge($data, $extraData, $controlModeData);
@@ -292,7 +348,7 @@ class ColorField extends FormField
 	/**
 	 * Method to get the data for the advanced mode to be passed to the layout for rendering.
 	 *
-	 * @param   object  $lang  The language object
+	 * @param   object $lang The language object
 	 *
 	 * @return  array
 	 *
@@ -304,6 +360,27 @@ class ColorField extends FormField
 			'colors'  => $this->colors,
 			'control' => $this->control,
 			'lang'    => $lang,
+		);
+	}
+
+	/**
+	 * Method to get the data for the colorpicker to be passed to the layout for rendering.
+	 *
+	 * @param   object $lang The language object
+	 *
+	 * @return  array
+	 *
+	 * @since   4.0
+	 */
+	protected function getPickerModeLayoutData($lang)
+	{
+		return array(
+			'default'  => $this->default,
+			'hue'      => $this->hue,
+			'lang'     => $lang,
+			'opacity'  => $this->opacity,
+			'swatches' => $this->swatches,
+			'value'    => $this->value,
 		);
 	}
 }
