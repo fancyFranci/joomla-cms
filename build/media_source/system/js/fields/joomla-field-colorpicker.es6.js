@@ -25,35 +25,24 @@
       this.btn = root.querySelector('.colorpicker-btn');
       this.btnWrapper = root.querySelector('.colorpicker-btn-wrapper');
       this.input = root.querySelector('.colorpicker-input');
-      this.wrapper = root;
 
       // Attributes
       this.clear = root.dataset.labelClear || 'Clear';
-      this.default = root.dataset.default;
+      this.default = root.dataset.default || '';
       this.format = root.dataset.format || 'hex';
-      this.hue = root.dataset.hue || true;
-      this.opacity = root.dataset.opacity || true;
+      this.hue = root.dataset.hue === 'true';
+      this.opacity = root.dataset.opacity === 'true';
+      this.preview = root.dataset.preview === 'true';
       this.save = root.dataset.labelSave || 'Save';
       this.swatches = JSON.parse(root.dataset.swatches) || [];
 
-      if (!this.input.value) {
-        let defaultFormatValue = '';
-
-        if (this.format === 'hex') {
-          defaultFormatValue = '#000000';
-        } else if (this.format === 'rgba') {
-          defaultFormatValue = 'rgba(0, 0, 0, 0)';
-        } else {
-          defaultFormatValue = 'rgb(0, 0, 0)';
-        }
-
-        this.input.value = root.dataset.value || this.default || defaultFormatValue;
-      }
-
       this.initPickr();
 
-      const success = this.pickr.setColor(this.input.value);
-      if (!success) {
+      if (!this.input.value && this.default) {
+        this.input.value = this.default;
+      }
+
+      if (this.input.value && !this.pickr.setColor(this.input.value)) {
         throw new Error(`Incorrect color format ${this.input.value}.`);
       }
     }
@@ -61,13 +50,14 @@
     initPickr() {
       this.pickr = Pickr.create({
         defaultRepresentation: this.format,
+        default: this.default || 'fff',
         el: this.btn,
         parent: this.btnWrapper,
         swatches: this.swatches,
         components: {
           hue: this.hue,
           opacity: this.opacity,
-          preview: true,
+          preview: this.preview,
           interaction: {
             hex: false,
             rgba: false,

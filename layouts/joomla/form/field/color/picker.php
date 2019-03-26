@@ -29,6 +29,8 @@ extract($displayData);
  * @var   string   $name      Name of the input field.
  * @var   string   $onchange  Onchange attribute for the field.
  * @var   string   $onclick   Onclick attribute for the field.
+ * @var   boolean  $opacity   Display separate opacity selection
+ * @var   boolean  $preview   Display preview of old and selected color
  * @var   boolean  $readonly  Is this field read only?
  * @var   integer  $size      Size attribute of the input.
  * @var   array    $swatches  Separate selections inside the colorpicker
@@ -54,6 +56,8 @@ $hint      = strlen($hint) ? ' placeholder="' . $this->escape($hint) . '"' : ' p
 $hue       = $hue ? ' data-hue=' . $hue : '';
 $onchange  = $onchange ? ' onchange="' . $onchange . '"' : '';
 $onclick   = $onclick ? ' onclick="' . $onclick . '"' : '';
+$opacity   = $opacity ? ' data-opacity=' . $opacity : '';
+$preview   = $preview ? ' data-preview=' . $preview : '';
 $readonly  = $readonly ? ' readonly' : '';
 $save      = ' data-label-save="' . Text::_('JSAVE') . '"';
 $size      = $size ? ' size="' . $size . '"' : '';
@@ -80,13 +84,15 @@ HTMLHelper::_('script', 'system/fields/joomla-field-colorpicker.min.js', ['versi
 	$default,
 	$format,
 	$hue,
+	$opacity,
+	$preview,
 	$save,
 	$size,
 	$swatches;
 	?>
 >
-    <!-- The value is written in this input field -->
-    <input type="text" id="<?php echo $id; ?>" name="<?php echo $name; ?>"
+	<!-- The value is written in this input field -->
+	<input type="text" id="<?php echo $id; ?>" name="<?php echo $name; ?>"
 		<?php echo
 		$autofocus,
 		$class,
@@ -100,10 +106,10 @@ HTMLHelper::_('script', 'system/fields/joomla-field-colorpicker.min.js', ['versi
 		$required,
 		$value;
 		?>
-    />
+	/>
 
-    <div class="colorpicker-btn-wrapper">
-        <!-- This button is used to open the library picker -->
-        <button type="button" class="colorpicker-btn">Colorpicker</button>
-    </div>
+	<div class="colorpicker-btn-wrapper">
+		<!-- This button is used to open the library picker -->
+		<button type="button" class="colorpicker-btn">Colorpicker</button>
+	</div>
 </div>

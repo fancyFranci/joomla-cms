@@ -53,7 +53,7 @@ class ColorField extends FormField
 	 * @var    string
 	 * @since  4.0
 	 */
-	protected $default = '#000000';
+	protected $default;
 
 	/**
 	 * The format.
@@ -69,7 +69,7 @@ class ColorField extends FormField
 	 * @var    boolean
 	 * @since  4.0
 	 */
-	protected $hue = true;
+	protected $hue = false;
 
 	/**
 	 * The keywords (transparent,initial,inherit).
@@ -93,7 +93,7 @@ class ColorField extends FormField
 	 * @var    boolean
 	 * @since  4.0
 	 */
-	protected $opacity = true;
+	protected $opacity = false;
 
 	/**
 	 * The position.
@@ -102,6 +102,14 @@ class ColorField extends FormField
 	 * @since  3.2
 	 */
 	protected $position = 'default';
+
+	/**
+	 * Shows comparison between old and selected value
+	 *
+	 * @var    boolean
+	 * @since  4.0
+	 */
+	protected $preview = false;
 
 	/**
 	 * The split.
@@ -140,6 +148,7 @@ class ColorField extends FormField
 			case 'hue':
 			case 'keywords':
 			case 'opacity':
+			case 'preview':
 			case 'split':
 				return $this->$name;
 		}
@@ -174,6 +183,7 @@ class ColorField extends FormField
 				break;
 			case 'hue':
 			case 'opacity':
+			case 'preview':
 				$this->$name = (boolean) $value;
 				break;
 			default:
@@ -205,10 +215,11 @@ class ColorField extends FormField
 			$this->control  = isset($this->element['control']) ? (string) $this->element['control'] : 'hue';
 			$this->default  = isset($this->element['default']) ? (string) $this->element['default'] : '';
 			$this->format   = isset($this->element['format']) ? (string) $this->element['format'] : 'hex';
-			$this->hue      = isset($this->element['hue']) ? (string) $this->element['hue'] : true;
+			$this->hue      = isset($this->element['hue']) ? (string) $this->element['hue'] : false;
 			$this->keywords = isset($this->element['keywords']) ? (string) $this->element['keywords'] : '';
-			$this->opacity  = isset($this->element['opacity']) ? (string) $this->element['opacity'] : true;
+			$this->opacity  = isset($this->element['opacity']) ? (string) $this->element['opacity'] : false;
 			$this->position = isset($this->element['position']) ? (string) $this->element['position'] : 'default';
+			$this->preview  = isset($this->element['preview']) ? (string) $this->element['preview'] : false;
 			$this->split    = isset($this->element['split']) ? (int) $this->element['split'] : 3;
 			$this->swatches = isset($this->element['swatches']) ? explode(',', $this->element['swatches']) : [];
 			$this->value    = isset($this->element['value']) ? (string) $this->element['value'] : '';
@@ -379,6 +390,7 @@ class ColorField extends FormField
 			'hue'      => $this->hue,
 			'lang'     => $lang,
 			'opacity'  => $this->opacity,
+			'preview'  => $this->preview,
 			'swatches' => $this->swatches,
 			'value'    => $this->value,
 		);
