@@ -6,17 +6,16 @@
   'use strict';
 
   /**
-   * Creates an interactive color picker with optional bars for
-   * hue, saturation, light and alpha values
+   * Creates an interactive color picker with optional selections for
+   * hue and opacity.
    *
    * @since 4.0
    */
   class JoomlaFieldColorPicker {
     /**
-     * @param {HTMLInputElement} root
+     * @param {HTMLElement} root
      */
     constructor(root) {
-      // Check necessary library Pickr
       if (!Pickr) {
         throw new Error('The colorpicker needs library @simonwep/Pickr.');
       }
@@ -47,6 +46,9 @@
       }
     }
 
+    /**
+     * Creates the colorpicker with given options and sets value on input field
+     */
     initPickr() {
       this.pickr = Pickr.create({
         defaultRepresentation: this.format,
