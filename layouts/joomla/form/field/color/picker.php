@@ -33,7 +33,7 @@ extract($displayData);
  * @var   boolean  $preview   Display preview of old and selected color
  * @var   boolean  $readonly  Is this field read only?
  * @var   integer  $size      Size attribute of the input.
- * @var   array    $swatches  Separate selections inside the colorpicker
+ * @var   array    $colors  Separate selections inside the colorpicker
  * @var   string   $value     Value attribute of the field.
  */
 
@@ -61,7 +61,7 @@ $preview   = $preview ? ' data-preview=' . $preview : '';
 $readonly  = $readonly ? ' readonly' : '';
 $save      = ' data-label-save="' . Text::_('JSAVE') . '"';
 $size      = $size ? ' size="' . $size . '"' : '';
-$swatches  = " data-swatches='" . json_encode($swatches) . "'";
+$colors  = " data-colors='" . json_encode($colors) . "'";
 $value     = $value ? ' value="' . $value . '"' : '';
 
 if (empty($lang))
@@ -88,7 +88,7 @@ HTMLHelper::_('script', 'system/fields/joomla-field-colorpicker.min.js', ['versi
 	$preview,
 	$save,
 	$size,
-	$swatches;
+	$colors;
 	?>
 >
 	<!-- The value is written in this input field -->

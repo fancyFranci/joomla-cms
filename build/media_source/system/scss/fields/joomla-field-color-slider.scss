@@ -1,0 +1,20 @@
+.color-slider-wrapper {
+
+  input[type="range"]{
+    //height: 1.5rem;
+    -webkit-appearance: none;
+    background: linear-gradient(to right, #FF0000, #FFAA00, #A2FF00, #00FF00,
+            #00FFBB, #0077FF, #5100FF, #FF00D4, #FF0000);
+
+    // IE
+    &::-ms-fill-upper {
+      background: linear-gradient(to right, #FF0000, #FFAA00, #A2FF00, #00FF00,
+              #00FFBB, #0077FF, #5100FF, #FF00D4, #FF0000);
+    }
+
+    &::-ms-fill-lower {
+      background: linear-gradient(to right, #FF0000, #FFAA00, #A2FF00, #00FF00,
+              #00FFBB, #0077FF, #5100FF, #FF00D4, #FF0000);
+    }
+  }
+}

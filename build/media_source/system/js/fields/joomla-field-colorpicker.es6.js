@@ -33,7 +33,7 @@
       this.opacity = root.dataset.opacity === 'true';
       this.preview = root.dataset.preview === 'true';
       this.save = root.dataset.labelSave || 'Save';
-      this.swatches = JSON.parse(root.dataset.swatches) || [];
+      this.colors = JSON.parse(root.dataset.colors) || [];
 
       this.initPickr();
 
@@ -55,7 +55,7 @@
         default: this.default || 'fff',
         el: this.btn,
         parent: this.btnWrapper,
-        swatches: this.swatches,
+        swatches: this.colors,
         components: {
           hue: this.hue,
           opacity: this.opacity,
