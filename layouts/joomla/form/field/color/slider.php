@@ -22,10 +22,12 @@ extract($displayData);
  * -----------------
  * @var   boolean $autofocus  Is autofocus enabled?
  * @var   string  $class      Classes for the input.
+ * @var   string  $color      Color value for saturation or light.
  * @var   boolean $disabled   Is this field disabled?
  * @var   string  $default    Default value for this field
  * @var   string  $format     Format of color value
  * @var   string  $hint       Hint for placeholder
+ * @var   string  $hue        Color value when target is saturation or light
  * @var   number  $light      Value for v of hsv (here called light)
  * @var   string  $name       Name of the input field.
  * @var   string  $onchange   Onchange attribute for the field.
@@ -47,28 +49,36 @@ else
 	$placeholder = '#rrggbb';
 }
 
-$autofocus  = $autofocus ? ' autofocus' : '';
-$class      = ' class="form-control color-slider ' . $class . '"';
-$default    = $default ? ' data-default="' . $default . '"' : '';
-$disabled   = $disabled ? ' disabled' : '';
-$format     = $format ? ' data-format="' . $format . '"' : '';
-$hint       = strlen($hint) ? ' placeholder="' . $this->escape($hint) . '"' : ' placeholder="' . $placeholder . '"';
-$light      = $light ? ' data-light="' . $light . '"' : '';
-$onchange   = $onchange ? ' onchange="' . $onchange . '"' : '';
-$onclick    = $onclick ? ' onclick="' . $onclick . '"' : '';
-$preview    = $preview ? ' data-preview="true"' : ' data-preview="false"';
-$readonly   = $readonly ? ' readonly' : '';
-$saturation = $saturation ? ' data-saturation="' . $saturation . '"' : '';
-$size       = $size ? ' size="' . $size . '"' : '';
-$target     = $target ? $target : 'hue';
-$dataTarget = ' data-target="' . $target . '"';
-$value      = $value ? ' value="' . $value . '"' : '';
-
 if ($target === 'hue')
 {
 	$min = 0;
 	$max = 360;
 }
+else
+{
+	// Light, saturation and alpha are percentage
+	$min = 0;
+	$max = 100;
+}
+
+$autofocus  = $autofocus ? ' autofocus' : '';
+$class      = ' class="form-control color-slider ' . $class . '"';
+$color      = $color ? ' data-color="' . $color . '"' : '';
+$default    = $default ? ' data-default="' . $default . '"' : '';
+$disabled   = $disabled ? ' disabled' : '';
+$format     = $format ? ' data-format="' . $format . '"' : '';
+$hint       = strlen($hint) ? ' placeholder="' . $this->escape($hint) . '"' : ' placeholder="' . $placeholder . '"';
+$hue        = $hue ? ' data-hue="' . $hue . '"' : '';
+$light      = $light ? ' data-light="' . $light . '"' : '';
+$onchange   = $onchange ? ' onchange="' . $onchange . '"' : '';
+$onclick    = $onclick ? ' onclick="' . $onclick . '"' : '';
+$preview    = $preview ? ' data-preview="' . $preview . '"' : '';
+$readonly   = $readonly ? ' readonly' : '';
+$saturation = $saturation ? ' data-saturation="' . $saturation . '"' : '';
+$size       = $size ? ' size="' . $size . '"' : '';
+$target     = $target ? $target : 'hue';
+$target     = ' data-target="' . $target . '"';
+$value      = $value ? ' value="' . $value . '"' : '';
 
 HTMLHelper::_('stylesheet', 'system/fields/joomla-field-color-slider.min.css', ['version' => 'auto', 'relative' => true]);
 HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['version' => 'auto', 'relative' => true]);
@@ -76,12 +86,14 @@ HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['vers
 
 <div class="color-slider-wrapper"
 	<?php echo
+	$color,
 	$default,
 	$format,
 	$light,
 	$preview,
 	$saturation,
-	$size;
+	$size,
+	$target;
 	?>
 >
     <input type="text" class="form-control color-input" id="<?php echo $id; ?>" name="<?php echo $name; ?>" disabled/>

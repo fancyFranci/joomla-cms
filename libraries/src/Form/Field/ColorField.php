@@ -32,6 +32,14 @@ class ColorField extends FormField
 	protected $type = 'Color';
 
 	/**
+	 * Color for slider with target saturation or light.
+	 *
+	 * @var    string
+	 * @since  3.2
+	 */
+	protected $color;
+
+	/**
 	 * The colors.
 	 *
 	 * @var    mixed
@@ -66,10 +74,10 @@ class ColorField extends FormField
 	/**
 	 * Possibility to select hue color value
 	 *
-	 * @var    boolean
+	 * @var    boolean|string
 	 * @since  4.0
 	 */
-	protected $hue = false;
+	protected $hue;
 
 	/**
 	 * The keywords (transparent,initial,inherit).
@@ -90,7 +98,7 @@ class ColorField extends FormField
 	/**
 	 * The value in hsV format
 	 *
-	 * @var    float
+	 * @var    number
 	 * @since  4.0
 	 */
 	protected $light = 1;
@@ -112,7 +120,7 @@ class ColorField extends FormField
 	protected $position = 'default';
 
 	/**
-	 * Shows comparison between old and selected value
+	 * Shows preview of the selected color
 	 *
 	 * @var    boolean
 	 * @since  4.0
@@ -122,7 +130,7 @@ class ColorField extends FormField
 	/**
 	 * The value in hSv format
 	 *
-	 * @var    float
+	 * @var    number
 	 * @since  4.0
 	 */
 	protected $saturation = 1;
@@ -232,19 +240,20 @@ class ColorField extends FormField
 		if ($return)
 		{
 			$this->colors     = (string) $this->element['colors'];
+			$this->color      = (string) $this->element['color'];
 			$this->control    = isset($this->element['control']) ? (string) $this->element['control'] : 'hue';
-			$this->default    = isset($this->element['default']) ? (string) $this->element['default'] : '';
+			$this->default    = (string) $this->element['default'];
 			$this->format     = isset($this->element['format']) ? (string) $this->element['format'] : 'hex';
-			$this->hue        = isset($this->element['hue']) ? (boolean) $this->element['hue'] : false;
-			$this->keywords   = isset($this->element['keywords']) ? (string) $this->element['keywords'] : '';
+			$this->hue        = isset($this->element['hue']) ? (string) $this->element['hue'] : false;
+			$this->keywords   = (string) $this->element['keywords'];
 			$this->light      = isset($this->element['light']) ? (float) $this->element['light'] : 1;
-			$this->opacity    = isset($this->element['opacity']) ? (boolean) $this->element['opacity'] : false;
+			$this->opacity    = isset($this->element['opacity']) ? (string) $this->element['opacity'] : false;
 			$this->position   = isset($this->element['position']) ? (string) $this->element['position'] : 'default';
-			$this->preview    = isset($this->element['preview']) ? (boolean) $this->element['preview'] : false;
+			$this->preview    = isset($this->element['preview']) ? (string) $this->element['preview'] : false;
 			$this->saturation = isset($this->element['saturation']) ? (float) $this->element['saturation'] : 1;
 			$this->split      = isset($this->element['split']) ? (int) $this->element['split'] : 3;
 			$this->target     = isset($this->element['target']) ? (string) $this->element['target'] : 'hue';
-			$this->value      = isset($this->element['value']) ? (string) $this->element['value'] : '';
+			$this->value      = (string) $this->element['value'];
 		}
 
 		return $return;
@@ -431,7 +440,9 @@ class ColorField extends FormField
 	protected function getSliderModeLayoutData()
 	{
 		return array(
+			'color'      => $this->color,
 			'default'    => $this->default,
+			'hue'        => $this->hue,
 			'format'     => $this->format,
 			'light'      => $this->light,
 			'preview'    => $this->preview,
