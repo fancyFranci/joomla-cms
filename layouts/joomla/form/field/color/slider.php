@@ -22,7 +22,6 @@ extract($displayData);
  * -----------------
  * @var   boolean $autofocus  Is autofocus enabled?
  * @var   string  $class      Classes for the input.
- * @var   string  $color      Color value for saturation or light.
  * @var   boolean $disabled   Is this field disabled?
  * @var   string  $default    Default value for this field
  * @var   string  $format     Format of color value
@@ -63,7 +62,6 @@ else
 
 $autofocus  = $autofocus ? ' autofocus' : '';
 $class      = ' class="form-control color-slider ' . $class . '"';
-$color      = $color ? ' data-color="' . $color . '"' : '';
 $default    = $default ? ' data-default="' . $default . '"' : '';
 $disabled   = $disabled ? ' disabled' : '';
 $format     = $format ? ' data-format="' . $format . '"' : '';
@@ -78,7 +76,7 @@ $saturation = $saturation ? ' data-saturation="' . $saturation . '"' : '';
 $size       = $size ? ' size="' . $size . '"' : '';
 $target     = $target ? $target : 'hue';
 $target     = ' data-target="' . $target . '"';
-$value      = $value ? ' value="' . $value . '"' : '';
+$value      = $value ? ' data-value="' . $value . '"' : '';
 
 HTMLHelper::_('stylesheet', 'system/fields/joomla-field-color-slider.min.css', ['version' => 'auto', 'relative' => true]);
 HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['version' => 'auto', 'relative' => true]);
@@ -86,14 +84,15 @@ HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['vers
 
 <div class="color-slider-wrapper"
 	<?php echo
-	$color,
 	$default,
 	$format,
+	$hue,
 	$light,
 	$preview,
 	$saturation,
 	$size,
-	$target;
+	$target,
+    $value;
 	?>
 >
     <input type="text" class="form-control color-input" id="<?php echo $id; ?>" name="<?php echo $name; ?>" disabled/>
@@ -109,8 +108,7 @@ HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['vers
 		$onclick,
 		$placeholder,
 		$readonly,
-		$required,
-		$value;
+		$required;
 		?>
     />
 </div>

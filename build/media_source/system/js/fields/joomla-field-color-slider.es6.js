@@ -40,22 +40,30 @@
       this.preview = element.dataset.preview === 'true';
       this.saturation = element.dataset.saturation || 1;
       this.target = element.dataset.target || 'hue';
+      this.value = element.dataset.value || this.default;
 
-      // Convert color value to use it as hue
-      if (hexRegex.test(this.color)) {
-        [this.hue] = JoomlaFieldColorSlider.convertHexToHsv(this.color);
-      } else if (rgbRegex.test(this.color)) {
-        [this.hue] = JoomlaFieldColorSlider.convertRgbToHsv(this.color);
-      } else {
-        throw new Error('Incorrect color format.');
+      // Convert color value to use it as hue, saturation and light
+      if (this.color) {
+        if (hexRegex.test(this.color)) {
+          [
+            this.hue,
+            this.saturation,
+            this.light,
+          ] = JoomlaFieldColorSlider.convertHexToHsv(this.color);
+        } else if (rgbRegex.test(this.color)) {
+          [
+            this.hue,
+            this.saturation,
+            this.light,
+          ] = JoomlaFieldColorSlider.convertRgbToHsv(this.color);
+        }
       }
 
-      if (!this.input.value && this.default) {
-        this.input.value = this.default;
-        this.setValueToSlider(this.default);
+      if (this.value) {
+        this.setValueToSlider(this.value);
       }
 
-      this.setStyle();
+      this.setBackground();
 
       this.slider.addEventListener('change', () => this.changeValue());
     }
@@ -77,15 +85,15 @@
     }
 
     /**
-     * Set styling/linear gradient for slider background
+     * Set linear gradient for slider background
      */
-    setStyle() {
+    setBackground() {
       const colors = [];
 
       if (this.target === 'hue') {
         const steps = Math.floor(360 / 25);
         // Longer start color so slider selection matches displayed colors
-        colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(1)));
+        colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(0)));
 
         for (let i = 0; i <= 360; i += steps) {
           colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(i)));
@@ -93,9 +101,7 @@
 
         // Longer end color so slider selection matches displayed colors
         colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(360)));
-      }
-
-      if (this.target === 'saturation') {
+      } else {
         // Longer start color so slider selection matches displayed colors
         colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(0)));
 
@@ -109,7 +115,7 @@
 
       this.slider.style.background = `linear-gradient(to right, ${colors.join(',')}`;
 
-      // Hide input field to see the selected hex/rgb value
+      // Hide input field, when selected value should not be visible
       if (!this.preview) {
         this.input.style.display = 'none';
       }
@@ -120,26 +126,33 @@
      * @param {string} value
      */
     setValueToSlider(value) {
-      let hsv;
+      let h;
+      let s;
+      let v;
 
-      if (hexRegex.test(value)) {
-        hsv = JoomlaFieldColorSlider.convertHexToHsv(value);
-      } else if (rgbRegex.test(value)) {
-        hsv = JoomlaFieldColorSlider.convertRgbToHsv(value);
+      if (this.format === 'hex' && hexRegex.test(value)) {
+        [h, s, v] = JoomlaFieldColorSlider.convertHexToHsv(value);
+      } else if (this.format === 'rgb' && rgbRegex.test(value)) {
+        [h, s, v] = JoomlaFieldColorSlider.convertRgbToHsv(value);
+      } else {
+        throw new Error(`Value ${value} should be in ${this.format} format.`);
       }
 
       switch (this.target) {
         case 'saturation':
-          this.slider.value = hsv[1];
+          this.slider.value = s * 100;
           break;
         case 'light':
-          this.slider.value = hsv[2];
+          this.slider.value = v * 100;
           break;
         case 'hue':
         default:
-          this.slider.value = hsv[0];
+          this.slider.value = h;
           break;
       }
+
+      this.input.value = value;
+      this.input.style.background = value;
     }
 
     /**
@@ -206,6 +219,8 @@
      * @return {array}
      */
     static convertRgbToHsv(values) {
+      console.log('convert Rgb to HSV: ', values);
+
       let rgb = values;
 
       if (typeof values === 'string') {

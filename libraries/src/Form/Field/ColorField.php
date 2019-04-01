@@ -72,7 +72,7 @@ class ColorField extends FormField
 	protected $format = 'hex';
 
 	/**
-	 * Possibility to select hue color value
+	 * Possibility to select hue color value or configure slider value
 	 *
 	 * @var    boolean|string
 	 * @since  4.0
@@ -244,7 +244,7 @@ class ColorField extends FormField
 			$this->control    = isset($this->element['control']) ? (string) $this->element['control'] : 'hue';
 			$this->default    = (string) $this->element['default'];
 			$this->format     = isset($this->element['format']) ? (string) $this->element['format'] : 'hex';
-			$this->hue        = isset($this->element['hue']) ? (string) $this->element['hue'] : false;
+			$this->hue        = isset($this->element['hue']) ? (string) $this->element['hue'] : '';
 			$this->keywords   = (string) $this->element['keywords'];
 			$this->light      = isset($this->element['light']) ? (float) $this->element['light'] : 1;
 			$this->opacity    = isset($this->element['opacity']) ? (string) $this->element['opacity'] : false;
@@ -440,7 +440,6 @@ class ColorField extends FormField
 	protected function getSliderModeLayoutData()
 	{
 		return array(
-			'color'      => $this->color,
 			'default'    => $this->default,
 			'hue'        => $this->hue,
 			'format'     => $this->format,
