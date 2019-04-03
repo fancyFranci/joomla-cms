@@ -21,48 +21,62 @@ extract($displayData);
  * Layout variables
  * -----------------
  * @var   boolean  $autofocus Is autofocus enabled?
+ * @var   string   $color     Value to give the picker.
  * @var   string   $class     Classes for the input.
  * @var   boolean  $disabled  Is this field disabled?
- * @var   boolean  $default   Default color value for wrong inputs
- * @var   boolean  $hue       Display separate hue selection
- * @var   Language $lang      The loaded Language class
+ * @var   string   $display   Which value should be displayed and be selectable by slider?
+ * @var   boolean  $default   Default color.
+ * @var   string   $format    Format of color value ("hex", "rgb", "hsv", "hue", "%").
+ * @var   string   $hint      Hint for placeholder.
+ * @var   Language $lang      The loaded Language class.
  * @var   string   $name      Name of the input field.
  * @var   string   $onchange  Onchange attribute for the field.
  * @var   string   $onclick   Onclick attribute for the field.
- * @var   boolean  $opacity   Display separate opacity selection
- * @var   boolean  $preview   Display preview of old and selected color
+ * @var   boolean  $preview   Display preview of selected color.
  * @var   boolean  $readonly  Is this field read only?
  * @var   integer  $size      Size attribute of the input.
- * @var   array    $colors  Separate selections inside the colorpicker
+ * @var   array    $colors    Separate selections inside the colorpicker.
  * @var   string   $value     Value attribute of the field.
  */
 
 if (in_array($format, ['rgb', 'rgba'], true))
 {
-	$placeholder = $format === 'rgba' ? 'rgba(0, 0, 0, 0.5)' : 'rgb(0, 0, 0)';
+	$placeholder = $format === 'rgba' ? 'rgba(0, 0, 0, 0)' : 'rgb(0, 0, 0)';
 }
 else
 {
 	$placeholder = '#rrggbb';
 }
 
-$autofocus = $autofocus ? ' autofocus' : '';
-$class     = ' class="form-control colorpicker-input ' . $class . '"';
-$clear     = ' data-label-clear="' . Text::_('JCLEAR') . '"';
-$default   = $default ? ' data-default="' . $default . '"' : '';
-$disabled  = $disabled ? ' disabled' : '';
-$format    = $format ? ' data-format="' . $format . '"' : '';
-$hint      = strlen($hint) ? ' placeholder="' . $this->escape($hint) . '"' : ' placeholder="' . $placeholder . '"';
-$hue       = $hue ? ' data-hue=' . $hue : '';
-$onchange  = $onchange ? ' onchange="' . $onchange . '"' : '';
-$onclick   = $onclick ? ' onclick="' . $onclick . '"' : '';
-$opacity   = $opacity ? ' data-opacity=' . $opacity : '';
-$preview   = $preview ? ' data-preview=' . $preview : '';
-$readonly  = $readonly ? ' readonly' : '';
-$save      = ' data-label-save="' . Text::_('JSAVE') . '"';
-$size      = $size ? ' size="' . $size . '"' : '';
-$colors  = " data-colors='" . json_encode($colors) . "'";
-$value     = $value ? ' value="' . $value . '"' : '';
+if ($display === 'hue')
+{
+	$min = 0;
+	$max = 360;
+}
+else
+{
+	// Light and saturation are percentage values
+	$min = 0;
+	$max = 100;
+}
+
+$autofocus   = $autofocus ? ' autofocus' : '';
+$inputClass  = ' class="form-control colorpicker-input ' . $class . '"';
+$sliderClass = ' class="form-control colorpicker-slider ' . $class . '"';
+$clear       = ' data-label-clear="' . Text::_('JCLEAR') . '"';
+$default     = $default ? ' data-default="' . $default . '"' : '';
+$displayData = $display ? ' data-display="' . $display . '"' : '';
+$disabled    = $disabled ? ' disabled' : '';
+$format      = $format ? ' data-format="' . strtolower($format) . '"' : '';
+$hint        = strlen($hint) ? ' placeholder="' . $this->escape($hint) . '"' : ' placeholder="' . $placeholder . '"';
+$onchange    = $onchange ? ' onchange="' . $onchange . '"' : '';
+$onclick     = $onclick ? ' onclick="' . $onclick . '"' : '';
+$preview     = $preview ? ' data-preview=' . $preview : '';
+$readonly    = $readonly ? ' readonly' : '';
+$save        = ' data-label-save="' . Text::_('JSAVE') . '"';
+$size        = $size ? ' size="' . $size . '"' : '';
+$colors      = " data-colors='" . json_encode($colors) . "'";
+$value       = $value ? ' value="' . $value . '"' : '';
 
 if (empty($lang))
 {
@@ -82,34 +96,37 @@ HTMLHelper::_('script', 'system/fields/joomla-field-colorpicker.min.js', ['versi
 	<?php echo
 	$clear,
 	$default,
+	$displayData,
 	$format,
-	$hue,
-	$opacity,
 	$preview,
 	$save,
 	$size,
 	$colors;
 	?>
 >
-	<!-- The value is written in this input field -->
-	<input type="text" id="<?php echo $id; ?>" name="<?php echo $name; ?>"
+    <!-- The value is written in this input field -->
+    <input type="text" id="<?php echo $id; ?>" name="<?php echo $name; ?>"
 		<?php echo
 		$autofocus,
-		$class,
+		$inputClass,
 		$direction,
 		$disabled,
 		$hint,
 		$onchange,
 		$onclick,
 		$placeholder,
-		$readonly,
 		$required,
 		$value;
 		?>
-	/>
+    />
 
-	<div class="colorpicker-btn-wrapper">
-		<!-- This button is used to open the library picker -->
-		<button type="button" class="colorpicker-btn">Colorpicker</button>
-	</div>
+	<?php if (empty($display)) : ?>
+        <div class="colorpicker-btn-wrapper">
+            <!-- This button is used to open the library picker -->
+            <button type="button" class="colorpicker-btn">Colorpicker</button>
+        </div>
+	<?php else : ?>
+        <!-- Slider input -->
+        <input type="range" min="<?php echo $min; ?>" max="<?php echo $max; ?>" <?php echo $sliderClass; ?> />
+	<?php endif ?>
 </div>
