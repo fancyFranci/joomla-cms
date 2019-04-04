@@ -197,7 +197,7 @@ class ColorField extends FormField
 			$this->control  = isset($this->element['control']) ? (string) $this->element['control'] : 'hue';
 			$this->default  = (string) $this->element['default'];
 			$this->format   = isset($this->element['format']) ? (string) $this->element['format'] : 'hex';
-			$this->display  = isset($this->element['display']) ? (string) $this->element['display'] : '';
+			$this->display  = isset($this->element['display']) ? (string) $this->element['display'] : 'hue';
 			$this->keywords = (string) $this->element['keywords'];
 			$this->position = isset($this->element['position']) ? (string) $this->element['position'] : 'default';
 			$this->preview  = isset($this->element['preview']) ? (string) $this->element['preview'] : false;
