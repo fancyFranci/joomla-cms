@@ -32,14 +32,6 @@ class ColorField extends FormField
 	protected $type = 'Color';
 
 	/**
-	 * Color for slider with target saturation or light.
-	 *
-	 * @var    string
-	 * @since  3.2
-	 */
-	protected $color;
-
-	/**
 	 * The colors.
 	 *
 	 * @var    mixed
@@ -64,20 +56,20 @@ class ColorField extends FormField
 	protected $default;
 
 	/**
+	 * The type of value the slider should display: 'hue', 'saturation' or 'light'.
+	 *
+	 * @var    string
+	 * @since  4.0
+	 */
+	protected $display = 'hue';
+
+	/**
 	 * The format.
 	 *
 	 * @var    string
 	 * @since  3.6.0
 	 */
 	protected $format = 'hex';
-
-	/**
-	 * Possibility to select hue color value or configure slider value
-	 *
-	 * @var    boolean|string
-	 * @since  4.0
-	 */
-	protected $hue;
 
 	/**
 	 * The keywords (transparent,initial,inherit).
@@ -96,22 +88,6 @@ class ColorField extends FormField
 	protected $layout = 'joomla.form.field.color';
 
 	/**
-	 * The value in hsV format
-	 *
-	 * @var    number
-	 * @since  4.0
-	 */
-	protected $light = 1;
-
-	/**
-	 * Possibility to select opacity of a color value
-	 *
-	 * @var    boolean
-	 * @since  4.0
-	 */
-	protected $opacity = false;
-
-	/**
 	 * The position.
 	 *
 	 * @var    mixed
@@ -128,28 +104,12 @@ class ColorField extends FormField
 	protected $preview = false;
 
 	/**
-	 * The value in hSv format
-	 *
-	 * @var    number
-	 * @since  4.0
-	 */
-	protected $saturation = 1;
-
-	/**
 	 * The split.
 	 *
 	 * @var    integer
 	 * @since  3.2
 	 */
 	protected $split = 3;
-
-	/**
-	 * The type of value the slider should display: 'hue', 'alpha', 'saturation' or 'light'.
-	 *
-	 * @var    string
-	 * @since  4.0
-	 */
-	protected $target = 'hue';
 
 	/**
 	 * Method to get certain otherwise inaccessible properties from the form field object.
@@ -167,15 +127,12 @@ class ColorField extends FormField
 			case 'colors':
 			case 'control':
 			case 'default':
+			case 'display':
 			case 'exclude':
 			case 'format':
-			case 'hue':
 			case 'keywords':
-			case 'light':
-			case 'opacity':
 			case 'preview':
 			case 'split':
-			case 'saturation':
 				return $this->$name;
 		}
 
@@ -199,18 +156,15 @@ class ColorField extends FormField
 			case 'colors':
 			case 'control':
 			case 'default':
+			case 'display':
 			case 'exclude':
 			case 'format':
 			case 'keywords':
 				$this->$name = (string) $value;
 				break;
-			case 'light':
-			case 'saturation':
 			case 'split':
 				$this->$name = (int) $value;
 				break;
-			case 'hue':
-			case 'opacity':
 			case 'preview':
 				$this->$name = (boolean) $value;
 				break;
@@ -239,21 +193,16 @@ class ColorField extends FormField
 
 		if ($return)
 		{
-			$this->colors     = (string) $this->element['colors'];
-			$this->color      = (string) $this->element['color'];
-			$this->control    = isset($this->element['control']) ? (string) $this->element['control'] : 'hue';
-			$this->default    = (string) $this->element['default'];
-			$this->format     = isset($this->element['format']) ? (string) $this->element['format'] : 'hex';
-			$this->hue        = isset($this->element['hue']) ? (string) $this->element['hue'] : '';
-			$this->keywords   = (string) $this->element['keywords'];
-			$this->light      = isset($this->element['light']) ? (float) $this->element['light'] : 1;
-			$this->opacity    = isset($this->element['opacity']) ? (string) $this->element['opacity'] : false;
-			$this->position   = isset($this->element['position']) ? (string) $this->element['position'] : 'default';
-			$this->preview    = isset($this->element['preview']) ? (string) $this->element['preview'] : false;
-			$this->saturation = isset($this->element['saturation']) ? (float) $this->element['saturation'] : 1;
-			$this->split      = isset($this->element['split']) ? (int) $this->element['split'] : 3;
-			$this->target     = isset($this->element['target']) ? (string) $this->element['target'] : 'hue';
-			$this->value      = (string) $this->element['value'];
+			$this->colors   = (string) $this->element['colors'];
+			$this->control  = isset($this->element['control']) ? (string) $this->element['control'] : 'hue';
+			$this->default  = (string) $this->element['default'];
+			$this->format   = isset($this->element['format']) ? (string) $this->element['format'] : 'hex';
+			$this->display  = isset($this->element['display']) ? (string) $this->element['display'] : 'hue';
+			$this->keywords = (string) $this->element['keywords'];
+			$this->position = isset($this->element['position']) ? (string) $this->element['position'] : 'default';
+			$this->preview  = isset($this->element['preview']) ? (string) $this->element['preview'] : false;
+			$this->split    = isset($this->element['split']) ? (int) $this->element['split'] : 3;
+			$this->value    = (string) $this->element['value'];
 		}
 
 		return $return;
@@ -311,15 +260,12 @@ class ColorField extends FormField
 			case 'simple':
 				$controlModeData = $this->getSimpleModeLayoutData();
 				break;
-			case 'advanced':
-				$controlModeData = $this->getAdvancedModeLayoutData($lang);
-				break;
 			case 'slider':
 				$controlModeData = $this->getSliderModeLayoutData();
 				break;
-			case 'picker':
+			case 'advanced':
 			default:
-				$controlModeData = $this->getPickerModeLayoutData($lang);
+				$controlModeData = $this->getAdvancedModeLayoutData($lang);
 				break;
 		}
 
@@ -409,28 +355,6 @@ class ColorField extends FormField
 	}
 
 	/**
-	 * Method to get the data for the colorpicker to be passed to the layout for rendering.
-	 *
-	 * @param   object $lang The language object
-	 *
-	 * @return  array
-	 *
-	 * @since   4.0
-	 */
-	protected function getPickerModeLayoutData($lang)
-	{
-		return array(
-			'default' => $this->default,
-			'hue'     => $this->hue,
-			'lang'    => $lang,
-			'opacity' => $this->opacity,
-			'preview' => $this->preview,
-			'colors'  => explode(',', $this->colors),
-			'value'   => $this->value,
-		);
-	}
-
-	/**
 	 * Method to get the data for the slider
 	 *
 	 * @return  array
@@ -441,12 +365,8 @@ class ColorField extends FormField
 	{
 		return array(
 			'default'    => $this->default,
-			'hue'        => $this->hue,
-			'format'     => $this->format,
-			'light'      => $this->light,
+			'display'    => $this->display,
 			'preview'    => $this->preview,
-			'saturation' => $this->saturation,
-			'target'     => strtolower($this->target),
 			'value'      => $this->value,
 		);
 	}

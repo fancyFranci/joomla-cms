@@ -6,19 +6,25 @@
   'use strict';
 
   /**
-   * Regex to test for hex values
+   * Regex for hex values e.g. #FF3929
    * @type {RegExp}
    */
-  const hexRegex = new RegExp(/^#[a-zA-Z0-9]{6}$/);
+  const hexRegex = new RegExp(/^#([a-z0-9]{2})([a-z0-9]{2})([a-z0-9]{2})$/i);
 
   /**
-   * Regex to test for rgb values rgb(255,0,24);
+   * Regex for rgb values e.g. rgb(255,0,24);
    * @type {RegExp}
    */
-  const rgbRegex = new RegExp(/^rgb\(([0-9]+,\s*){2}([0-9]+)\)$/);
+  const rgbRegex = new RegExp(/^rgb\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)\)$/i);
 
   /**
-   * Creates a slider for color values like hue, saturation, light and alpha.
+   * Regex for hsl values e.g. hsl(255,0,24);
+   * @type {RegExp}
+   */
+  const hslRegex = new RegExp(/^hsl\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)\)$/i);
+
+  /**
+   * Creates a slider for the color values hue, saturation and light.
    *
    * @since 4.0
    */
@@ -34,36 +40,21 @@
       // Attributes
       this.color = element.dataset.color || '';
       this.default = element.dataset.default || '';
+      this.display = element.dataset.display || 'hue';
       this.format = element.dataset.format || 'hex';
-      this.hue = element.dataset.hue || '';
-      this.light = element.dataset.light || 1;
       this.preview = element.dataset.preview === 'true';
-      this.saturation = element.dataset.saturation || 1;
-      this.target = element.dataset.target || 'hue';
-      this.value = element.dataset.value || this.default;
 
-      // Convert color value to use it as hue, saturation and light
-      if (this.color) {
-        if (hexRegex.test(this.color)) {
-          [
-            this.hue,
-            this.saturation,
-            this.light,
-          ] = JoomlaFieldColorSlider.convertHexToHsv(this.color);
-        } else if (rgbRegex.test(this.color)) {
-          [
-            this.hue,
-            this.saturation,
-            this.light,
-          ] = JoomlaFieldColorSlider.convertRgbToHsv(this.color);
-        }
-      }
+      this.hue = 360;
+      this.saturation = 1;
+      this.light = 1;
 
-      if (this.value) {
-        this.setValueToSlider(this.value);
-      }
-
+      this.setInitValue();
       this.setBackground();
+
+      // Hide input field, when selected value should not be visible
+      if (!this.preview) {
+        this.input.style.display = 'none';
+      }
 
       this.slider.addEventListener('change', () => this.changeValue());
     }
@@ -72,15 +63,33 @@
      * Set selected value into input field and set it as its background-color.
      */
     changeValue() {
-      const rgb = this.inputToRgb();
-      const rgbString = JoomlaFieldColorSlider.getRgbString(rgb);
+      const rgb = this.valueToRgb();
+      const rgbString = this.getRgbString(rgb);
+      let value;
 
-      if (this.format === 'hex') {
-        this.input.value = JoomlaFieldColorSlider.convertRgbToHex(rgb);
-      } else {
-        this.input.value = rgbString;
+      switch (this.format) {
+        case 'hex':
+          value = this.convertRgbToHex(rgb);
+          break;
+        case 'rgb':
+          value = rgbString;
+          break;
+        case 'saturation':
+          value = this.display === 'saturation' ? this.slider.value
+            : this.convertRgbToHsl(rgb)[1] * 100;
+          break;
+        case 'light':
+          value = this.display === 'light' ? this.slider.value
+            : this.convertRgbToHsl(rgb)[2] * 100;
+          break;
+        case 'hue':
+        default:
+          value = this.display === 'hue' ? this.slider.value
+            : this.convertRgbToHsl(rgb)[0];
+          break;
       }
 
+      this.input.value = value;
       this.input.style.background = rgbString;
     }
 
@@ -89,70 +98,89 @@
      */
     setBackground() {
       const colors = [];
+      let endValue = 100;
 
-      if (this.target === 'hue') {
-        const steps = Math.floor(360 / 25);
-        // Longer start color so slider selection matches displayed colors
-        colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(0)));
+      // Longer start color so slider selection matches displayed colors
+      colors.push(this.getRgbString(this.valueToRgb(0)));
 
+      if (this.display === 'hue') {
+        const steps = Math.floor(360 / 20);
         for (let i = 0; i <= 360; i += steps) {
-          colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(i)));
+          colors.push(this.getRgbString(this.valueToRgb(i)));
         }
 
-        // Longer end color so slider selection matches displayed colors
-        colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(360)));
+        endValue = 360;
       } else {
-        // Longer start color so slider selection matches displayed colors
-        colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(0)));
-
         for (let i = 0; i <= 100; i += 10) {
-          colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(i)));
+          colors.push(this.getRgbString(this.valueToRgb(i)));
         }
-
-        // Longer end color so slider selection matches displayed colors
-        colors.push(JoomlaFieldColorSlider.getRgbString(this.inputToRgb(100)));
       }
 
-      this.slider.style.background = `linear-gradient(to right, ${colors.join(',')}`;
+      // Longer end color so slider selection matches displayed colors
+      colors.push(this.getRgbString(this.valueToRgb(endValue)));
 
-      // Hide input field, when selected value should not be visible
-      if (!this.preview) {
-        this.input.style.display = 'none';
-      }
+      this.slider.style.background = `linear-gradient(to right, ${colors.join(
+        ',')}`;
     }
 
     /**
-     * Convert value to correct format and set needed hsv part into slider
-     * @param {string} value
+     * Convert given color into hue, saturation and light
      */
-    setValueToSlider(value) {
-      let h;
-      let s;
-      let v;
+    setInitValue() {
+      const value = this.color || this.default || '';
 
-      if (this.format === 'hex' && hexRegex.test(value)) {
-        [h, s, v] = JoomlaFieldColorSlider.convertHexToHsv(value);
-      } else if (this.format === 'rgb' && rgbRegex.test(value)) {
-        [h, s, v] = JoomlaFieldColorSlider.convertRgbToHsv(value);
-      } else {
-        throw new Error(`Value ${value} should be in ${this.format} format.`);
+      if (!value) {
+        return;
       }
 
-      switch (this.target) {
+      if (typeof value === 'number') {
+        if (this.display === 'hue') {
+          this.hue = value;
+        }
+        if (this.display === 'saturation') {
+          this.saturation = value <= 1 ? value * 100 : value;
+        }
+        if (this.display === 'light') {
+          this.light = value <= 1 ? value * 100 : value;
+        }
+      } else if (hexRegex.test(value)) {
+        [
+          this.hue,
+          this.saturation,
+          this.light,
+        ] = this.convertHexToHsl(value);
+      } else if (rgbRegex.test(value)) {
+        [
+          this.hue,
+          this.saturation,
+          this.light,
+        ] = this.convertRgbToHsl(value);
+      } else if (hslRegex.test(value)) {
+        const matches = value.match(hslRegex);
+        this.hue = matches[1];
+        this.saturation = matches[2];
+        this.light = matches[3];
+      } else {
+        throw new Error(`Incorrect value ${value}.`);
+      }
+
+      switch (this.display) {
         case 'saturation':
-          this.slider.value = s * 100;
+          this.slider.value = this.saturation * 100;
           break;
         case 'light':
-          this.slider.value = v * 100;
+          this.slider.value = this.light * 100;
           break;
         case 'hue':
         default:
-          this.slider.value = h;
+          console.log('this.hue', this.hue);
+          this.slider.value = this.hue;
           break;
       }
 
-      this.input.value = value;
-      this.input.style.background = value;
+      if (typeof value !== 'number') {
+        this.input.style.background = value;
+      }
     }
 
     /**
@@ -160,47 +188,47 @@
      * @params {int} [value]
      * @returns array
      */
-    inputToRgb(value) {
+    valueToRgb(value) {
+      const input = value === undefined ? this.slider.value : value;
       let h = this.hue;
       let s = this.saturation;
-      let v = this.light;
-      const input = value === undefined ? this.slider.valueAsNumber : value;
+      let l = this.light;
 
-      if (this.target === 'hue') {
+      if (this.display === 'hue') {
         h = input;
       }
-      if (this.target === 'saturation') {
+      if (this.display === 'saturation') {
         s = input;
       }
-      if (this.target === 'light') {
-        v = input;
+      if (this.display === 'light') {
+        l = input;
       }
 
       // Percentage light and saturation
-      if (v > 1) {
-        v /= 100;
+      if (l > 1) {
+        l /= 100;
       }
       if (s > 1) {
         s /= 100;
       }
 
-      return JoomlaFieldColorSlider.convertHsvToRgb(h, s, v);
+      return this.convertHslToRgb(h, s, l);
     }
 
     /**
      * Set RGB value to slider input field
      * @params {array} rgb
      */
-    static getRgbString(rgb) {
+    getRgbString(rgb) {
       return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
     }
 
     /**
-     * Returns hsv values out of hex
+     * Returns hsl values out of hex
      * @param {array} rgb
      * @return {string}
      */
-    static convertRgbToHex(rgb) {
+    convertRgbToHex(rgb) {
       let r = rgb[0].toString(16).toUpperCase();
       let g = rgb[1].toString(16).toUpperCase();
       let b = rgb[2].toString(16).toUpperCase();
@@ -214,110 +242,109 @@
     }
 
     /**
-     * Returns hsv values out of rgb
+     * Returns hsl values out of rgb
      * @param {string|array} values
      * @return {array}
      */
-    static convertRgbToHsv(values) {
-      console.log('convert Rgb to HSV: ', values);
-
+    convertRgbToHsl(values) {
       let rgb = values;
 
       if (typeof values === 'string') {
-        const parts = values.match(/^rgb([0-9]+),\s*([0-9]+),\s*([0-9]+)$/);
-        rgb = [parts[0], parts[1], parts[2]];
+        const parts = values.match(rgbRegex);
+        rgb = [parts[1], parts[2], parts[3]];
       }
 
-      const corrected = rgb.map(value => (value > 1 ? value / 255 : value));
-      const r = corrected[0];
-      const g = corrected[1];
-      const b = corrected[2];
+      const [r, g, b] = rgb.map(value => (value > 1 ? value / 255 : value));
       const max = Math.max(r, g, b);
       const min = Math.min(r, g, b);
+      const l = (max + min) / 2;
+      const d = max - min;
       let h = 0;
       let s = 0;
-      const v = max;
 
-      if (max === min) {
-        h = 0;
-      } else if (r === max) {
-        h = 60 * ((g - b) / (max - min));
-      } else if (g === max) {
-        h = 60 * (2 + ((b - r) / (max - min)));
-      } else if (b === max) {
-        h = 60 * (4 + ((r - g) / (max - min)));
+      if (max !== min) {
+        if (max === 0) {
+          s = max;
+        } else if (min === 1) {
+          s = min;
+        } else {
+          s = (max - l) / (Math.min(l, 1 - l));
+        }
+        // s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+        switch (max) {
+          case r:
+            h = 60 * (g - b) / d; // + (g < b ? 6 : 0);
+            break;
+          case g:
+            h = 60 * (2 + (b - r) / d);
+            break;
+          case b:
+          default:
+            h = 60 * (4 + (r - g) / d);
+            break;
+        }
+
+        // h /= 6;
       }
 
-      if (h < 0) {
-        h += 360;
-      }
+      h = h < 0 ? h + 360 : h;
 
-      if (max === 0) {
-        s = 0;
-      } else {
-        s = (max - min) / max;
-      }
-
-      return [h, s, v];
+      return [h, s, l];
     }
 
     /**
-     * Returns hsv values out of hex
+     * Returns hsl values out of hex
      * @param {string} hex
      * @return {array}
      */
-    static convertHexToHsv(hex) {
-      const parts = hex.match(/^#([a-zA-Z0-9]{2})([a-zA-Z0-9]{2})([a-zA-Z0-9]{2})$/);
+    convertHexToHsl(hex) {
+      const parts = hex.match(hexRegex);
       const r = parts[1];
       const g = parts[2];
       const b = parts[3];
 
       const rgb = [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16)];
 
-      return JoomlaFieldColorSlider.convertRgbToHsv(rgb);
+      return this.convertRgbToHsl(rgb);
     }
 
     /**
-     * Convert HSV values into RGB
+     * Convert HSL values into RGB
      * @param {number} h
-     * @param {int} s
-     * @param {int} v
+     * @param {number} s
+     * @param {number} l
      * @returns {number[]}
      */
-    static convertHsvToRgb(h, s, v) {
-      let rgb;
-      const i = h / 60;
-      const hi = Math.floor(i);
-      const f = i - hi;
-      const p = v * (1 - s);
-      const q = v * (1 - s * f);
-      const t = v * (1 - s * (1 - f));
+    convertHslToRgb(h, s, l) {
+      let r = 1;
+      let g = 1;
+      let b = 1;
 
-      switch (hi) {
-        case 0:
-        case 6:
-          rgb = [v, t, p];
-          break;
-        case 1:
-          rgb = [q, v, p];
-          break;
-        case 2:
-          rgb = [p, v, t];
-          break;
-        case 3:
-          rgb = [p, q, v];
-          break;
-        case 4:
-          rgb = [t, p, v];
-          break;
-        case 5:
-          rgb = [v, p, q];
-          break;
-        default:
-          throw new Error('Incorrect hsv values');
+      if (h < 0 || h > 360 || s < 0 || s > 1 || l < 0 || l > 1) {
+        throw new Error(`Incorrect value of hsl(${h}, ${s}, ${l}).`);
       }
 
-      return rgb.map(value => Math.round(value * 255));
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const hi = h / 60;
+      const x = c * (1 - Math.abs((hi % 2) - 1));
+      const m = l - c / 2;
+
+      if (h >= 0 && h < 60) {
+        [r, g, b] = [c, x, 0];
+      } else if (h >= 60 && h < 120) {
+        [r, g, b] = [x, c, 0];
+      } else if (h >= 120 && h < 180) {
+        [r, g, b] = [0, c, x];
+      } else if (h >= 180 && h < 240) {
+        [r, g, b] = [0, x, c];
+      } else if (h >= 240 && h < 300) {
+        [r, g, b] = [x, 0, c];
+      } else if (h >= 300 && h <= 360) {
+        [r, g, b] = [c, 0, x];
+      }
+
+      return [r, g, b].map(value => Math.round((value + m) * 255));
     }
   }
 

@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "@claviska/jquery-minicolors": "2.2.6",
-    "@simonwep/pickr": "^0.4.4",
     "@webcomponents/webcomponentsjs": "2.1.2",
     "awesomplete": "github:LeaVerou/awesomplete",
     "bootstrap": "~4.3",
