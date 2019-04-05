@@ -21,17 +21,18 @@ extract($displayData);
  * Layout variables
  * -----------------
  * @var   boolean $autofocus Is autofocus enabled?
- * @var   string  $class     Classes for the input.
+ * @var   string  $class     Classes for the input
  * @var   boolean $disabled  Is this field disabled?
  * @var   string  $display   Which kind of slider should be displayed?
  * @var   string  $default   Default value for this field
  * @var   string  $format    Format of color value
- * @var   string  $name      Name of the input field.
- * @var   string  $onchange  Onchange attribute for the field.
- * @var   string  $onclick   Onclick attribute for the field.
+ * @var   string  $hint      Text for inputs placeholder
+ * @var   string  $name      Name of the input field
+ * @var   string  $onchange  Onchange attribute for the field
+ * @var   string  $onclick   Onclick attribute for the field
  * @var   boolean $preview   Should the selected value be displayed separately?
  * @var   boolean $readonly  Is this field read only?
- * @var   integer $size      Size attribute of the input.
+ * @var   integer $size      Size attribute of the input
  */
 
 if ($display === 'hue')
@@ -50,8 +51,10 @@ $autofocus = $autofocus ? ' autofocus' : '';
 $color     = $color ? ' data-color="' . $color . '"' : '';
 $class     = ' class="form-control color-slider ' . $class . '"';
 $default   = $default ? ' data-default="' . $default . '"' : '';
+$display   = $display ? ' data-display="' . $display . '"' : '';
 $disabled  = $disabled ? ' disabled' : '';
 $format    = $format ? ' data-format="' . $format . '"' : '';
+$hint      = strlen($hint) ? ' placeholder="' . $this->escape($hint) . '"' : '';
 $onchange  = $onchange ? ' onchange="' . $onchange . '"' : '';
 $onclick   = $onclick ? ' onclick="' . $onclick . '"' : '';
 $preview   = $preview ? ' data-preview="' . $preview . '"' : '';
@@ -65,6 +68,7 @@ HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['vers
 <div class="color-slider-wrapper"
 	<?php echo
 	$default,
+	$display,
 	$format,
 	$preview,
 	$size;

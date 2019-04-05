@@ -15,13 +15,13 @@
    * Regex for rgb values e.g. rgb(255,0,24);
    * @type {RegExp}
    */
-  const rgbRegex = new RegExp(/^rgb\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)\)$/i);
+  const rgbRegex = new RegExp(/^rgb\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)[\D]+\)$/i);
 
   /**
    * Regex for hsl values e.g. hsl(255,0,24);
    * @type {RegExp}
    */
-  const hslRegex = new RegExp(/^hsl\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)\)$/i);
+  const hslRegex = new RegExp(/^hsl\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)[\D]+\)$/i);
 
   /**
    * Creates a slider for the color values hue, saturation and light.
@@ -56,41 +56,16 @@
         this.input.style.display = 'none';
       }
 
-      this.slider.addEventListener('change', () => this.changeValue());
+      this.slider.addEventListener('change', () => this.updateValue());
     }
 
     /**
      * Set selected value into input field and set it as its background-color.
      */
-    changeValue() {
-      const rgb = this.valueToRgb();
-      const rgbString = this.getRgbString(rgb);
-      let value;
-
-      switch (this.format) {
-        case 'hex':
-          value = this.convertRgbToHex(rgb);
-          break;
-        case 'rgb':
-          value = rgbString;
-          break;
-        case 'saturation':
-          value = this.display === 'saturation' ? this.slider.value
-            : this.convertRgbToHsl(rgb)[1] * 100;
-          break;
-        case 'light':
-          value = this.display === 'light' ? this.slider.value
-            : this.convertRgbToHsl(rgb)[2] * 100;
-          break;
-        case 'hue':
-        default:
-          value = this.display === 'hue' ? this.slider.value
-            : this.convertRgbToHsl(rgb)[0];
-          break;
-      }
-
-      this.input.value = value;
-      this.input.style.background = rgbString;
+    updateValue() {
+      const rgb = this.getValueAsRgb();
+      this.input.style.background = rgb;
+      this.setInputValue(this.convertRgbToHsl(rgb));
     }
 
     /**
@@ -101,26 +76,25 @@
       let endValue = 100;
 
       // Longer start color so slider selection matches displayed colors
-      colors.push(this.getRgbString(this.valueToRgb(0)));
+      colors.push(this.getValueAsRgb(0));
 
       if (this.display === 'hue') {
         const steps = Math.floor(360 / 20);
-        for (let i = 0; i <= 360; i += steps) {
-          colors.push(this.getRgbString(this.valueToRgb(i)));
-        }
-
         endValue = 360;
+
+        for (let i = 0; i <= 360; i += steps) {
+          colors.push(this.getValueAsRgb(i));
+        }
       } else {
         for (let i = 0; i <= 100; i += 10) {
-          colors.push(this.getRgbString(this.valueToRgb(i)));
+          colors.push(this.getValueAsRgb(i));
         }
       }
 
       // Longer end color so slider selection matches displayed colors
-      colors.push(this.getRgbString(this.valueToRgb(endValue)));
+      colors.push(this.getValueAsRgb(endValue));
 
-      this.slider.style.background = `linear-gradient(to right, ${colors.join(
-        ',')}`;
+      this.slider.style.background = `linear-gradient(to right, ${colors.join(',')}`;
     }
 
     /**
@@ -128,6 +102,7 @@
      */
     setInitValue() {
       const value = this.color || this.default || '';
+      let hsl = [];
 
       if (!value) {
         return;
@@ -135,48 +110,45 @@
 
       if (typeof value === 'number') {
         if (this.display === 'hue') {
-          this.hue = value;
+          hsl[0] = value;
         }
         if (this.display === 'saturation') {
-          this.saturation = value <= 1 ? value * 100 : value;
+          hsl[1] = value;
         }
         if (this.display === 'light') {
-          this.light = value <= 1 ? value * 100 : value;
+          hsl[2] = value;
         }
       } else if (hexRegex.test(value)) {
-        [
-          this.hue,
-          this.saturation,
-          this.light,
-        ] = this.convertHexToHsl(value);
+        hsl = this.convertHexToHsl(value);
       } else if (rgbRegex.test(value)) {
-        [
-          this.hue,
-          this.saturation,
-          this.light,
-        ] = this.convertRgbToHsl(value);
+        hsl = this.convertRgbToHsl(value);
       } else if (hslRegex.test(value)) {
         const matches = value.match(hslRegex);
-        this.hue = matches[1];
-        this.saturation = matches[2];
-        this.light = matches[3];
+        hsl = [matches[1], matches[2], matches[3]];
       } else {
-        throw new Error(`Incorrect value ${value}.`);
+        throw new Error(`Incorrect input value ${value}.`);
       }
+
+      // Saturation and light were calculated as 0.24 instead of 24%
+      hsl[1] = hsl[1] > 1 ? hsl[1] / 100 : hsl[1];
+      hsl[2] = hsl[2] > 1 ? hsl[2] / 100 : hsl[2];
+
+      [this.hue, this.saturation, this.light] = hsl;
 
       switch (this.display) {
         case 'saturation':
-          this.slider.value = this.saturation * 100;
+          this.slider.value = Math.round(this.saturation * 100);
           break;
         case 'light':
-          this.slider.value = this.light * 100;
+          this.slider.value = Math.round(this.light * 100);
           break;
         case 'hue':
         default:
-          console.log('this.hue', this.hue);
-          this.slider.value = this.hue;
+          this.slider.value = Math.round(this.hue);
           break;
       }
+
+      this.setInputValue(hsl);
 
       if (typeof value !== 'number') {
         this.input.style.background = value;
@@ -184,11 +156,39 @@
     }
 
     /**
+     * Set value in input field depending on format
+     * @param {array} hsl
+     */
+    setInputValue(hsl) {
+      switch (this.format) {
+        case 'hsl':
+          this.input.value = this.getHslString(hsl);
+          break;
+        case 'rgb':
+          this.input.value = this.getRgbString(this.convertHslToRgb(hsl));
+          break;
+        case 'hex':
+          this.input.value = this.convertRgbToHex(this.convertHslToRgb(hsl));
+          break;
+        case 'saturation':
+          this.input.value = Math.round(hsl[1] * 100);
+          break;
+        case 'light':
+          this.input.value = Math.round(hsl[2] * 100);
+          break;
+        case 'hue':
+        default:
+          this.input.value = Math.round(hsl[0]);
+          break;
+      }
+    }
+
+    /**
      * Calculates RGB value from color slider value
      * @params {int} [value]
-     * @returns array
+     * @returns string
      */
-    valueToRgb(value) {
+    getValueAsRgb(value) {
       const input = value === undefined ? this.slider.value : value;
       let h = this.hue;
       let s = this.saturation;
@@ -212,15 +212,29 @@
         s /= 100;
       }
 
-      return this.convertHslToRgb(h, s, l);
+      return this.getRgbString(this.convertHslToRgb([h, s, l]));
     }
 
     /**
-     * Set RGB value to slider input field
+     * Put RGB values into a string like 'rgb(<R>, <G>, <B>)'
      * @params {array} rgb
      */
     getRgbString(rgb) {
       return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+    }
+
+    /**
+     * Put HSL values into a string like 'hsl(<H>, <S>%, <L>%)'
+     * @params {array} values
+     */
+    getHslString(values) {
+      let hsl = values;
+
+      hsl[1] *= 100;
+      hsl[2] *= 100;
+      hsl = hsl.map(value => Math.round(value));
+
+      return `hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
     }
 
     /**
@@ -270,11 +284,10 @@
         } else {
           s = (max - l) / (Math.min(l, 1 - l));
         }
-        // s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
         switch (max) {
           case r:
-            h = 60 * (g - b) / d; // + (g < b ? 6 : 0);
+            h = 60 * (g - b) / d;
             break;
           case g:
             h = 60 * (2 + (b - r) / d);
@@ -284,8 +297,6 @@
             h = 60 * (4 + (r - g) / d);
             break;
         }
-
-        // h /= 6;
       }
 
       h = h < 0 ? h + 360 : h;
@@ -311,18 +322,16 @@
 
     /**
      * Convert HSL values into RGB
-     * @param {number} h
-     * @param {number} s
-     * @param {number} l
+     * @param {array} hsl
      * @returns {number[]}
      */
-    convertHslToRgb(h, s, l) {
+    convertHslToRgb([h, s, l]) {
       let r = 1;
       let g = 1;
       let b = 1;
 
       if (h < 0 || h > 360 || s < 0 || s > 1 || l < 0 || l > 1) {
-        throw new Error(`Incorrect value of hsl(${h}, ${s}, ${l}).`);
+        throw new Error(`Unable to convert hsl(${h}, ${s}, ${l}) into RGB.`);
       }
 
       const c = (1 - Math.abs(2 * l - 1)) * s;
