@@ -15,7 +15,7 @@
    * Regex for rgb values e.g. rgb(255,0,24);
    * @type {RegExp}
    */
-  const rgbRegex = new RegExp(/^rgb\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)[\D]+\)$/i);
+  const rgbRegex = new RegExp(/^rgb\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)\)$/i);
 
   /**
    * Regex for hsl values e.g. hsl(255,0,24);
@@ -64,7 +64,7 @@
      */
     updateValue() {
       const rgb = this.getValueAsRgb();
-      this.input.style.background = rgb;
+      this.input.style.background = this.getRgbString(rgb);
       this.setInputValue(this.convertRgbToHsl(rgb));
     }
 
@@ -72,8 +72,10 @@
      * Set linear gradient for slider background
      */
     setBackground() {
-      const colors = [];
+      let colors = [];
       let endValue = 100;
+
+      this.slider.style.webkitAppearance = 'none';
 
       // Longer start color so slider selection matches displayed colors
       colors.push(this.getValueAsRgb(0));
@@ -94,7 +96,10 @@
       // Longer end color so slider selection matches displayed colors
       colors.push(this.getValueAsRgb(endValue));
 
-      this.slider.style.background = `linear-gradient(to right, ${colors.join(',')}`;
+      // IE uses hex values
+      colors = colors.map(value => this.convertRgbToHex(value));
+
+      this.slider.style.background = `linear-gradient(to right, ${colors.join(',')})`;
     }
 
     /**
@@ -129,7 +134,6 @@
         throw new Error(`Incorrect input value ${value}.`);
       }
 
-      // Saturation and light were calculated as 0.24 instead of 24%
       hsl[1] = hsl[1] > 1 ? hsl[1] / 100 : hsl[1];
       hsl[2] = hsl[2] > 1 ? hsl[2] / 100 : hsl[2];
 
@@ -151,7 +155,7 @@
       this.setInputValue(hsl);
 
       if (typeof value !== 'number') {
-        this.input.style.background = value;
+        this.input.style.background = this.getRgbString(this.convertHslToRgb(hsl));
       }
     }
 
@@ -186,7 +190,7 @@
     /**
      * Calculates RGB value from color slider value
      * @params {int} [value]
-     * @returns string
+     * @returns string|array
      */
     getValueAsRgb(value) {
       const input = value === undefined ? this.slider.value : value;
@@ -212,7 +216,7 @@
         s /= 100;
       }
 
-      return this.getRgbString(this.convertHslToRgb([h, s, l]));
+      return this.convertHslToRgb([h, s, l]);
     }
 
     /**
@@ -325,10 +329,14 @@
      * @param {array} hsl
      * @returns {number[]}
      */
-    convertHslToRgb([h, s, l]) {
+    convertHslToRgb([h, sat, light]) {
       let r = 1;
       let g = 1;
       let b = 1;
+
+      // Saturation and light were calculated as 0.24 instead of 24%
+      const s = sat > 1 ? sat / 100 : sat;
+      const l = light > 1 ? light / 100 : light;
 
       if (h < 0 || h > 360 || s < 0 || s > 1 || l < 0 || l > 1) {
         throw new Error(`Unable to convert hsl(${h}, ${s}, ${l}) into RGB.`);
