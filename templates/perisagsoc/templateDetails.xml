@@ -49,10 +49,8 @@
                        description="JGLOBAL_SUBHEADING_DESC"
                        filter="string"/>
                 <field name="homework"
-                       type="textarea"
-                       default="This page is for the GSoC Project Joomla Project II: New frontend template: Page-builder"
-                       label="TPL_GSOC_PROJECT"
-                       filter="string"/>
+                       type="homework"
+                       label="TPL_PERISAGSOC_PROJECT_LABEL"/>
             </fieldset>
         </fields>
     </config>
