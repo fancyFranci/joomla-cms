@@ -40,7 +40,6 @@ tplGsocHelper::setMetadata();
 
 <div class="container">
 	<?php $customParam = htmlspecialchars($this->params->get('homework'), ENT_COMPAT, 'UTF-8'); ?>
-    <?php var_dump($customParam); ?>
 	<?php if (!empty($customParam)) : ?>
         <div class="alert alert-info" role="alert">
             <h4 class="alert-heading">Welcome to the GSoC Homework Page!</h4>
