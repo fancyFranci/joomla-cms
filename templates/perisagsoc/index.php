@@ -1,14 +1,13 @@
 <?php
 /**
- * @package    gsoc
- *
- * @author     Franciska <your@email.com>
- * @copyright  A copyright
+ * @author     Franciska Perisa
+ * @copyright  2019
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
- * @link       http://your.url.com
  */
 
 defined('_JEXEC') or die;
+
+use Joomla\CMS\Language\Text;
 
 require_once JPATH_THEMES . '/' . $this->template . '/helper.php';
 
@@ -41,10 +40,11 @@ tplGsocHelper::setMetadata();
 
 <div class="container">
 	<?php $customParam = htmlspecialchars($this->params->get('homework'), ENT_COMPAT, 'UTF-8'); ?>
+    <?php var_dump($customParam); ?>
 	<?php if (!empty($customParam)) : ?>
         <div class="alert alert-info" role="alert">
             <h4 class="alert-heading">Welcome to the GSoC Homework Page!</h4>
-            <div><?php echo $customParam; ?></div>
+            <div><?php echo Text::sprintf('TPL_PERISAGSOC_PROJECT_TEXT', $customParam); ?></div>
         </div>
 	<?php endif; ?>
 

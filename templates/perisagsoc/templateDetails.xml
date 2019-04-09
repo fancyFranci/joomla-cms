@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="template" version="3.9" client="site" method="upgrade">
-    <name>Francis GSoC Homework</name>
-    <version>1.0</version>
+    <name>perisagsoc</name>
+    <version>1.1</version>
     <creationDate>07.04.2019</creationDate>
     <author>Franciska Perisa</author>
     <authorEmail>francisa.perisa@outlook.com</authorEmail>
@@ -35,8 +35,8 @@
     </positions>
 
     <languages folder="language">
-        <language tag="en-GB">en-GB/en-GB.tpl_gsoc.ini</language>
-        <language tag="en-GB">en-GB/en-GB.tpl_gsoc.sys.ini</language>
+        <language tag="en-GB">en-GB/en-GB.tpl_perisagsoc.ini</language>
+        <language tag="en-GB">en-GB/en-GB.tpl_perisagsoc.sys.ini</language>
     </languages>
 
     <config>
