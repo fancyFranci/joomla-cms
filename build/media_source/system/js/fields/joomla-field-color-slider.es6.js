@@ -164,27 +164,31 @@
      * @param {array} hsl
      */
     setInputValue(hsl) {
+      let value;
+
       switch (this.format) {
         case 'hsl':
-          this.input.value = this.getHslString(hsl);
+          value = this.getHslString(hsl);
           break;
         case 'rgb':
-          this.input.value = this.getRgbString(this.convertHslToRgb(hsl));
+          value = this.getRgbString(this.convertHslToRgb(hsl));
           break;
         case 'hex':
-          this.input.value = this.convertRgbToHex(this.convertHslToRgb(hsl));
+          value = this.convertRgbToHex(this.convertHslToRgb(hsl));
           break;
         case 'saturation':
-          this.input.value = Math.round(hsl[1] * 100);
+          value = Math.round(hsl[1] * 100);
           break;
         case 'light':
-          this.input.value = Math.round(hsl[2] * 100);
+          value = Math.round(hsl[2] * 100);
           break;
         case 'hue':
         default:
-          this.input.value = Math.round(hsl[0]);
+          value = Math.round(hsl[0]);
           break;
       }
+
+      this.input.setAttribute('value', value);
     }
 
     /**

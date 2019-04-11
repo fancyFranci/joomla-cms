@@ -202,7 +202,6 @@ class ColorField extends FormField
 			$this->position = isset($this->element['position']) ? (string) $this->element['position'] : 'default';
 			$this->preview  = isset($this->element['preview']) ? (string) $this->element['preview'] : false;
 			$this->split    = isset($this->element['split']) ? (int) $this->element['split'] : 3;
-			$this->value    = (string) $this->element['value'];
 		}
 
 		return $return;
@@ -218,9 +217,16 @@ class ColorField extends FormField
 	 */
 	protected function getInput()
 	{
-		if (!empty($this->control))
+		switch ($this->control)
 		{
-			$this->layout .= '.' . $this->control;
+			case 'simple':
+				$this->layout .= '.' . $this->control;
+				break;
+			case 'slider':
+				$this->layout .= '.' . $this->control;
+				break;
+			default:
+				$this->layout .= '.advanced';
 		}
 
 		// Trim the trailing line in the layout file
@@ -319,20 +325,22 @@ class ColorField extends FormField
 
 			if ($count % 5 == 0)
 			{
-				$this->split = 5;
+				$split = 5;
 			}
 			else
 			{
 				if ($count % 4 == 0)
 				{
-					$this->split = 4;
+					$split = 4;
 				}
 			}
 		}
 
+		$split = $this->split ? $this->split : 3;
+
 		return array(
 			'colors' => $colors,
-			'split'  => $this->split,
+			'split'  => $split,
 		);
 	}
 
@@ -364,10 +372,9 @@ class ColorField extends FormField
 	protected function getSliderModeLayoutData()
 	{
 		return array(
-			'default'    => $this->default,
-			'display'    => $this->display,
-			'preview'    => $this->preview,
-			'value'      => $this->value,
+			'default' => $this->default,
+			'display' => $this->display,
+			'preview' => $this->preview,
 		);
 	}
 }
