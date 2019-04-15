@@ -64,7 +64,7 @@
      */
     updateValue() {
       const rgb = this.getValueAsRgb();
-      this.input.style.background = this.getRgbString(rgb);
+      this.input.style.border = `2px solid ${this.getRgbString(rgb)}`;
       this.setInputValue(this.convertRgbToHsl(rgb));
     }
 
@@ -155,7 +155,7 @@
       this.setInputValue(hsl);
 
       if (typeof value !== 'number') {
-        this.input.style.background = this.getRgbString(this.convertHslToRgb(hsl));
+        this.input.style.border = `2px solid ${this.getRgbString(this.convertHslToRgb(hsl))}`;
       }
     }
 
