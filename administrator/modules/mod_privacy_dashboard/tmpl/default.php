@@ -29,7 +29,7 @@ $activeRequests = 0;
 						<strong><?php echo JText::_('COM_PRIVACY_HEADING_REQUEST_TYPE_TYPE_' . $row->request_type); ?></strong>
 					</a>
 				</div>
-				<div class="span5"><?php echo JHtml::_('PrivacyHtml.helper.statusLabel', $row->status); ?></div>
+				<div class="span5"><?php echo JHtml::_('privacy.statusLabel', $row->status); ?></div>
 				<div class="span2"><span class="badge badge-info"><?php echo $row->count; ?></span></div>
 			</div>
 			<?php if (in_array($row->status, array(0, 1))) : ?>
@@ -38,8 +38,8 @@ $activeRequests = 0;
 			<?php $totalRequests += $row->count; ?>
 		<?php endforeach; ?>
 		<div class="row-fluid">
-			<div class="span6"><?php echo JText::plural('COM_PRIVACY_DASHBOARD_BADGE_TOTAL_REQUESTS', $totalRequests); ?></div>
-			<div class="span6"><?php echo JText::plural('COM_PRIVACY_DASHBOARD_BADGE_ACTIVE_REQUESTS', $activeRequests); ?></div>
+			<div class="span5"><?php echo JText::plural('COM_PRIVACY_DASHBOARD_BADGE_TOTAL_REQUESTS', $totalRequests); ?></div>
+			<div class="span7"><?php echo JText::plural('COM_PRIVACY_DASHBOARD_BADGE_ACTIVE_REQUESTS', $activeRequests); ?></div>
 		</div>
 	<?php else : ?>
 		<div class="row-fluid">
