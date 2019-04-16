@@ -21,7 +21,9 @@
    * Regex for hsl values e.g. hsl(255,0,24);
    * @type {RegExp}
    */
-  const hslRegex = new RegExp(/^hsl\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)[\D]+\)$/i);
+  const hslRegex = new RegExp(
+    /^hsl\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)[\D]+\)$/i,
+  );
 
   /**
    * Creates a slider for the color values hue, saturation and light.
@@ -35,12 +37,15 @@
     constructor(element) {
       // Elements
       this.input = element.querySelector('.color-input');
-      this.slider = element.querySelector('.color-slider');
+      this.sliders = element.querySelectorAll('.color-slider');
+      this.hueSlider = element.querySelector('.hue-slider');
+      this.saturationSlider = element.querySelector('.saturation-slider');
+      this.lightSlider = element.querySelector('.light-slider');
 
       // Attributes
       this.color = element.dataset.color || '';
       this.default = element.dataset.default || '';
-      this.display = element.dataset.display || 'hue';
+      this.display = element.dataset.display.split(',') || ['full'];
       this.format = element.dataset.format || 'hex';
       this.preview = element.dataset.preview === 'true';
 
@@ -56,50 +61,58 @@
         this.input.style.display = 'none';
       }
 
-      this.slider.addEventListener('change', () => this.updateValue());
+      Array.prototype.forEach.call(this.sliders, (slider) => {
+        slider.addEventListener('change', () => this.updateValue(slider));
+      });
+
+      // TODO: document.removeEventListener('DOMContentLoaded');
     }
 
     /**
      * Set selected value into input field and set it as its background-color.
      */
-    updateValue() {
-      const rgb = this.getValueAsRgb();
+    updateValue(slider) {
+      const rgb = this.getValueAsRgb(slider.value, slider.dataset.type);
+      const hsl = this.convertRgbToHsl(rgb);
+      [this.hue, this.saturation, this.light] = hsl;
+
       this.input.style.border = `2px solid ${this.getRgbString(rgb)}`;
-      this.setInputValue(this.convertRgbToHsl(rgb));
+      this.setSliderValues(hsl, slider.dataset.type);
+      this.setInputValue(hsl);
     }
 
     /**
      * Set linear gradient for slider background
      */
     setBackground() {
-      let colors = [];
       let endValue = 100;
 
-      this.slider.style.webkitAppearance = 'none';
+      Array.prototype.forEach.call(this.sliders, (slider) => {
+        let colors = [];
+        slider.style.webkitAppearance = 'none';
 
-      // Longer start color so slider selection matches displayed colors
-      colors.push(this.getValueAsRgb(0));
+        // Longer start color so slider selection matches displayed colors
+        colors.push(this.getValueAsRgb(0, slider.dataset.type));
 
-      if (this.display === 'hue') {
-        const steps = Math.floor(360 / 20);
-        endValue = 360;
+        if (slider.dataset.type === 'hue') {
+          const steps = Math.floor(360 / 20);
+          endValue = 360;
 
-        for (let i = 0; i <= 360; i += steps) {
-          colors.push(this.getValueAsRgb(i));
+          for (let i = 0; i <= 360; i += steps) {
+            colors.push(this.getValueAsRgb(i, slider.dataset.type));
+          }
+        } else {
+          for (let i = 0; i <= 100; i += 10) {
+            colors.push(this.getValueAsRgb(i, slider.dataset.type));
+          }
         }
-      } else {
-        for (let i = 0; i <= 100; i += 10) {
-          colors.push(this.getValueAsRgb(i));
-        }
-      }
 
-      // Longer end color so slider selection matches displayed colors
-      colors.push(this.getValueAsRgb(endValue));
+        // Longer end color so slider selection matches displayed colors
+        colors.push(this.getValueAsRgb(endValue, slider.dataset.type));
 
-      // IE uses hex values
-      colors = colors.map(value => this.convertRgbToHex(value));
-
-      this.slider.style.background = `linear-gradient(to right, ${colors.join(',')})`;
+        colors = colors.map(value => this.getRgbString(value));
+        slider.style.background = `linear-gradient(90deg, ${colors.join(',')})`;
+      });
     }
 
     /**
@@ -114,13 +127,13 @@
       }
 
       if (typeof value === 'number') {
-        if (this.display === 'hue') {
+        if (this.display.indexOf('hue') !== -1) {
           hsl[0] = value;
         }
-        if (this.display === 'saturation') {
+        if (this.display.indexOf('saturation') !== -1) {
           hsl[1] = value;
         }
-        if (this.display === 'light') {
+        if (this.display.indexOf('light') !== -1) {
           hsl[2] = value;
         }
       } else if (hexRegex.test(value)) {
@@ -139,23 +152,30 @@
 
       [this.hue, this.saturation, this.light] = hsl;
 
-      switch (this.display) {
-        case 'saturation':
-          this.slider.value = Math.round(this.saturation * 100);
-          break;
-        case 'light':
-          this.slider.value = Math.round(this.light * 100);
-          break;
-        case 'hue':
-        default:
-          this.slider.value = Math.round(this.hue);
-          break;
-      }
-
+      this.setSliderValues(hsl);
       this.setInputValue(hsl);
 
       if (typeof value !== 'number') {
-        this.input.style.border = `2px solid ${this.getRgbString(this.convertHslToRgb(hsl))}`;
+        this.input.style.border = `2px solid ${this.getRgbString(
+          this.convertHslToRgb(hsl),
+        )}`;
+      }
+    }
+
+    /**
+     * Set value in all sliders
+     * @param {array} [hsl]
+     * @param {string} [except]
+     */
+    setSliderValues([h, s, l], except) {
+      if (this.hueSlider && except !== 'hue') {
+        this.hueSlider.value = Math.round(h);
+      }
+      if (this.saturationSlider && except !== 'saturation') {
+        this.saturationSlider.value = Math.round(s * 100);
+      }
+      if (this.lightSlider && except !== 'light') {
+        this.lightSlider.value = Math.round(l * 100);
       }
     }
 
@@ -193,23 +213,25 @@
 
     /**
      * Calculates RGB value from color slider value
-     * @params {int} [value]
+     * @params {int} value convert this value
+     * @params {string} type type of value: hue, saturation or light
      * @returns string|array
      */
-    getValueAsRgb(value) {
-      const input = value === undefined ? this.slider.value : value;
+    getValueAsRgb(value, type) {
       let h = this.hue;
       let s = this.saturation;
       let l = this.light;
 
-      if (this.display === 'hue') {
-        h = input;
-      }
-      if (this.display === 'saturation') {
-        s = input;
-      }
-      if (this.display === 'light') {
-        l = input;
+      switch (type) {
+        case 'saturation':
+          s = value;
+          break;
+        case 'light':
+          l = value;
+          break;
+        case 'hue':
+        default:
+          h = value;
       }
 
       // Percentage light and saturation
@@ -370,10 +392,10 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    const sliders = document.querySelectorAll('.color-slider-wrapper');
+    const fields = document.querySelectorAll('.color-slider-wrapper');
 
-    if (sliders) {
-      Array.prototype.forEach.call(sliders, (slider) => {
+    if (fields) {
+      Array.prototype.forEach.call(fields, (slider) => {
         // eslint-disable-next-line no-new
         new JoomlaFieldColorSlider(slider);
       });

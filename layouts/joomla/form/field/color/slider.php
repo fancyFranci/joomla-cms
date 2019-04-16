@@ -7,10 +7,7 @@
  * @license     GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Language\Language;
-use Joomla\CMS\Language\Text;
 
 /**
  * @var array $displayData Data for this field collected by ColorField
@@ -39,33 +36,28 @@ extract($displayData);
  * @var   string  $validate     Validation rules to apply.
  */
 
-if ($display === 'hue')
-{
-	$min = 0;
-	$max = 360;
-}
-else
-{
-	// Light, saturation and alpha are percentage
-	$min = 0;
-	$max = 100;
-}
+$autocomplete  = !$autocomplete ? ' autocomplete="off"' : '';
+$autofocus     = $autofocus ? ' autofocus' : '';
+$color         = $color ? ' data-color="' . $color . '"' : '';
+$class         = $class ? ' class="' . $class . '"' : '';
+$default       = $default ? ' data-default="' . $default . '"' : '';
+$disabled      = $disabled ? ' disabled' : '';
+$format        = $format ? ' data-format="' . $format . '"' : '';
+$hint          = strlen($hint) ? ' placeholder="' . $this->escape($hint) . '"' : '';
+$onchange      = $onchange ? ' onchange="' . $onchange . '"' : '';
+$onclick       = $onclick ? ' onclick="' . $onclick . '"' : '';
+$preview       = $preview ? ' data-preview="' . $preview . '"' : '';
+$readonly      = $readonly ? ' readonly' : '';
+$size          = $size ? ' size="' . $size . '"' : '';
+$validate      = $validate ? ' data-validate="' . $validate . '"' : '';
 
-$autocomplete = !$autocomplete ? ' autocomplete="off"' : '';
-$autofocus    = $autofocus ? ' autofocus' : '';
-$color        = $color ? ' data-color="' . $color . '"' : '';
-$class        = $class ? ' class="' . $class . '"' : '';
-$default      = $default ? ' data-default="' . $default . '"' : '';
-$display      = $display ? ' data-display="' . $display . '"' : '';
-$disabled     = $disabled ? ' disabled' : '';
-$format       = $format ? ' data-format="' . $format . '"' : '';
-$hint         = strlen($hint) ? ' placeholder="' . $this->escape($hint) . '"' : '';
-$onchange     = $onchange ? ' onchange="' . $onchange . '"' : '';
-$onclick      = $onclick ? ' onclick="' . $onclick . '"' : '';
-$preview      = $preview ? ' data-preview="' . $preview . '"' : '';
-$readonly     = $readonly ? ' readonly' : '';
-$size         = $size ? ' size="' . $size . '"' : '';
-$validate     = $validate ? ' data-validate="' . $validate . '"' : '';
+$displayValues = explode(',', $display);
+$allSliders    = $display === 'full' || empty($display);
+$displayData   = ' data-display="' . ($display ? $display : 'full'). '"';
+
+var_dump($display);
+var_dump($displayValues);
+var_dump($allSliders);
 
 HTMLHelper::_('stylesheet', 'system/fields/joomla-field-color-slider.min.css', ['version' => 'auto', 'relative' => true]);
 HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['version' => 'auto', 'relative' => true]);
@@ -75,13 +67,13 @@ HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['vers
 	<?php echo
 	$class,
 	$default,
-	$display,
+	$displayData,
 	$format,
 	$preview,
 	$size;
 	?>
 >
-	<input type="text" class="form-control color-input" id="<?php echo $id; ?>" name="<?php echo $name; ?>"
+    <input type="text" class="form-control color-input" id="<?php echo $id; ?>" name="<?php echo $name; ?>"
 		<?php echo
 		$autocomplete,
 		$disabled,
@@ -93,11 +85,29 @@ HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['vers
 		$position,
 		$validate;
 		?>
-	/>
-	<input type="range" min="<?php echo $min; ?>" max="<?php echo $max; ?>" class="form-control color-slider"
-		<?php echo
-		$autofocus,
-		$disabled;
-		?>
-	/>
+    />
+	<?php if ($allSliders || in_array('hue', $displayValues)) : ?>
+        <input type="range" min="0" max="360" class="form-control color-slider hue-slider" data-type="hue"
+			<?php echo
+			$autofocus,
+			$disabled
+			?>
+        />
+	<?php endif ?>
+	<?php if ($allSliders || in_array('saturation', $displayValues)) : ?>
+        <input type="range" min="0" max="100" class="form-control color-slider saturation-slider" data-type="saturation"
+			<?php echo
+			$autofocus,
+			$disabled
+			?>
+        />
+	<?php endif ?>
+	<?php if ($allSliders || in_array('light', $displayValues)) : ?>
+        <input type="range" min="0" max="100" class="form-control color-slider light-slider" data-type="light"
+			<?php echo
+			$autofocus,
+			$disabled
+			?>
+        />
+	<?php endif ?>
 </div>
