@@ -64,8 +64,6 @@
       Array.prototype.forEach.call(this.sliders, (slider) => {
         slider.addEventListener('change', () => this.updateValue(slider));
       });
-
-      // TODO: document.removeEventListener('DOMContentLoaded');
     }
 
     /**
@@ -119,7 +117,9 @@
      * Convert given color into hue, saturation and light
      */
     setInitValue() {
-      const value = this.color || this.default || '';
+      const cssValue = window.getComputedStyle(this.input).getPropertyValue(this.default);
+      const value = this.color || cssValue || this.default || '';
+
       let hsl = [];
 
       if (!value) {
