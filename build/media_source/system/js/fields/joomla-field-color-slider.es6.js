@@ -83,10 +83,9 @@
      * Set linear gradient for slider background
      */
     setBackground() {
-      let endValue = 100;
-
       Array.prototype.forEach.call(this.sliders, (slider) => {
         let colors = [];
+        let endValue = 100;
         slider.style.webkitAppearance = 'none';
 
         // Longer start color so slider selection matches displayed colors
