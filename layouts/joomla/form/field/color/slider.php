@@ -36,24 +36,24 @@ extract($displayData);
  * @var   string  $validate     Validation rules to apply.
  */
 
-$autocomplete  = !$autocomplete ? ' autocomplete="off"' : '';
-$autofocus     = $autofocus ? ' autofocus' : '';
-$color         = $color ? ' data-color="' . $color . '"' : '';
-$class         = $class ? ' class="' . $class . '"' : '';
-$default       = $default ? ' data-default="' . $default . '"' : '';
-$disabled      = $disabled ? ' disabled' : '';
-$format        = $format ? ' data-format="' . $format . '"' : '';
-$hint          = strlen($hint) ? ' placeholder="' . $this->escape($hint) . '"' : '';
-$onchange      = $onchange ? ' onchange="' . $onchange . '"' : '';
-$onclick       = $onclick ? ' onclick="' . $onclick . '"' : '';
-$preview       = $preview ? ' data-preview="' . $preview . '"' : '';
-$readonly      = $readonly ? ' readonly' : '';
-$size          = $size ? ' size="' . $size . '"' : '';
-$validate      = $validate ? ' data-validate="' . $validate . '"' : '';
+$autocomplete = !$autocomplete ? ' autocomplete="off"' : '';
+$autofocus    = $autofocus ? ' autofocus' : '';
+$color        = $color ? ' data-color="' . $color . '"' : '';
+$class        = $class ? ' class="' . $class . '"' : '';
+$default      = $default ? ' data-default="' . $default . '"' : '';
+$disabled     = $disabled ? ' disabled' : '';
+$format       = $format ? ' data-format="' . $format . '"' : '';
+$hint         = strlen($hint) ? ' placeholder="' . $this->escape($hint) . '"' : '';
+$onchange     = $onchange ? ' onchange="' . $onchange . '"' : '';
+$onclick      = $onclick ? ' onclick="' . $onclick . '"' : '';
+$preview      = $preview ? ' data-preview="' . $preview . '"' : '';
+$readonly     = $readonly ? ' readonly' : '';
+$size         = $size ? ' size="' . $size . '"' : '';
+$validate     = $validate ? ' data-validate="' . $validate . '"' : '';
 
 $displayValues = explode(',', $display);
 $allSliders    = $display === 'full' || empty($display);
-$displayData   = ' data-display="' . ($display ? $display : 'full'). '"';
+$displayData   = ' data-display="' . ($display ? $display : 'full') . '"';
 
 HTMLHelper::_('stylesheet', 'system/fields/joomla-field-color-slider.min.css', ['version' => 'auto', 'relative' => true]);
 HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['version' => 'auto', 'relative' => true]);
@@ -62,6 +62,7 @@ HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['vers
 <div class="color-slider-wrapper"
 	<?php echo
 	$class,
+	$color,
 	$default,
 	$displayData,
 	$format,
