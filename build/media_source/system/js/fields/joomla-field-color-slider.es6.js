@@ -71,19 +71,26 @@
      */
     updateValue(slider) {
       const rgb = this.getValueAsRgb(slider.value, slider.dataset.type);
-      const hsl = this.convertRgbToHsl(rgb);
+      const hsl = this.rgbToHsl(rgb);
       [this.hue, this.saturation, this.light] = hsl;
 
       this.input.style.border = `2px solid ${this.getRgbString(rgb)}`;
       this.setSliderValues(hsl, slider.dataset.type);
       this.setInputValue(hsl);
+      this.setBackground(slider);
     }
 
     /**
      * Set linear gradient for slider background
+     * @param {HTMLInputElement} [exceptSlider]
      */
-    setBackground() {
+    setBackground(exceptSlider) {
       Array.prototype.forEach.call(this.sliders, (slider) => {
+        // Jump over changed slider
+        if (exceptSlider === slider) {
+          return;
+        }
+
         let colors = [];
         let endValue = 100;
         slider.style.webkitAppearance = 'none';
@@ -118,7 +125,6 @@
     setInitValue() {
       const cssValue = window.getComputedStyle(this.input).getPropertyValue(this.default);
       const value = this.color || cssValue || this.default || '';
-
       let hsl = [];
 
       if (!value) {
@@ -136,9 +142,9 @@
           hsl[2] = value;
         }
       } else if (hexRegex.test(value)) {
-        hsl = this.convertHexToHsl(value);
+        hsl = this.hexToHsl(value);
       } else if (rgbRegex.test(value)) {
-        hsl = this.convertRgbToHsl(value);
+        hsl = this.rgbToHsl(value);
       } else if (hslRegex.test(value)) {
         const matches = value.match(hslRegex);
         hsl = [matches[1], matches[2], matches[3]];
@@ -156,7 +162,7 @@
 
       if (typeof value !== 'number') {
         this.input.style.border = `2px solid ${this.getRgbString(
-          this.convertHslToRgb(hsl),
+          this.hslToRgb(hsl),
         )}`;
       }
     }
@@ -190,10 +196,10 @@
           value = this.getHslString(hsl);
           break;
         case 'rgb':
-          value = this.getRgbString(this.convertHslToRgb(hsl));
+          value = this.getRgbString(this.hslToRgb(hsl));
           break;
         case 'hex':
-          value = this.convertRgbToHex(this.convertHslToRgb(hsl));
+          value = this.rgbToHex(this.hslToRgb(hsl));
           break;
         case 'saturation':
           value = Math.round(hsl[1] * 100);
@@ -241,7 +247,7 @@
         s /= 100;
       }
 
-      return this.convertHslToRgb([h, s, l]);
+      return this.hslToRgb([h, s, l]);
     }
 
     /**
@@ -271,7 +277,7 @@
      * @param {array} rgb
      * @return {string}
      */
-    convertRgbToHex(rgb) {
+    rgbToHex(rgb) {
       let r = rgb[0].toString(16).toUpperCase();
       let g = rgb[1].toString(16).toUpperCase();
       let b = rgb[2].toString(16).toUpperCase();
@@ -289,7 +295,7 @@
      * @param {string|array} values
      * @return {array}
      */
-    convertRgbToHsl(values) {
+    rgbToHsl(values) {
       let rgb = values;
 
       if (typeof values === 'string') {
@@ -338,7 +344,7 @@
      * @param {string} hex
      * @return {array}
      */
-    convertHexToHsl(hex) {
+    hexToHsl(hex) {
       const parts = hex.match(hexRegex);
       const r = parts[1];
       const g = parts[2];
@@ -346,7 +352,7 @@
 
       const rgb = [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16)];
 
-      return this.convertRgbToHsl(rgb);
+      return this.rgbToHsl(rgb);
     }
 
     /**
@@ -354,7 +360,7 @@
      * @param {array} hsl
      * @returns {number[]}
      */
-    convertHslToRgb([h, sat, light]) {
+    hslToRgb([h, sat, light]) {
       let r = 1;
       let g = 1;
       let b = 1;
@@ -384,6 +390,8 @@
         [r, g, b] = [x, 0, c];
       } else if (h >= 300 && h <= 360) {
         [r, g, b] = [c, 0, x];
+      } else {
+        throw new Error(`Unable to convert hue ${h} into RGB.`);
       }
 
       return [r, g, b].map(value => Math.round((value + m) * 255));
