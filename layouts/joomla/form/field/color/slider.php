@@ -36,6 +36,7 @@ extract($displayData);
  * @var   string  $validate     Validation rules to apply.
  */
 
+$alpha        = $format === 'hsla' || $format === 'rgba' || $format === 'alpha';
 $autocomplete = !$autocomplete ? ' autocomplete="off"' : '';
 $autofocus    = $autofocus ? ' autofocus' : '';
 $color        = $color ? ' data-color="' . $color . '"' : '';
@@ -70,7 +71,7 @@ HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['vers
 	$size;
 	?>
 >
-    <input type="text" class="form-control color-input" id="<?php echo $id; ?>" name="<?php echo $name; ?>"
+	<input type="text" class="form-control color-input" id="<?php echo $id; ?>" name="<?php echo $name; ?>"
 		<?php echo
 		$autocomplete,
 		$disabled,
@@ -82,29 +83,37 @@ HTMLHelper::_('script', 'system/fields/joomla-field-color-slider.min.js', ['vers
 		$position,
 		$validate;
 		?>
-    />
+	/>
 	<?php if ($allSliders || in_array('hue', $displayValues)) : ?>
-        <input type="range" min="0" max="360" class="form-control color-slider hue-slider" data-type="hue"
+		<input type="range" min="0" max="360" class="form-control color-slider hue-slider" data-type="hue"
 			<?php echo
 			$autofocus,
 			$disabled
 			?>
-        />
+		/>
 	<?php endif ?>
 	<?php if ($allSliders || in_array('saturation', $displayValues)) : ?>
-        <input type="range" min="0" max="100" class="form-control color-slider saturation-slider" data-type="saturation"
+		<input type="range" min="0" max="100" class="form-control color-slider saturation-slider" data-type="saturation"
 			<?php echo
 			$autofocus,
 			$disabled
 			?>
-        />
+		/>
 	<?php endif ?>
 	<?php if ($allSliders || in_array('light', $displayValues)) : ?>
-        <input type="range" min="0" max="100" class="form-control color-slider light-slider" data-type="light"
+		<input type="range" min="0" max="100" class="form-control color-slider light-slider" data-type="light"
 			<?php echo
 			$autofocus,
 			$disabled
 			?>
-        />
+		/>
+	<?php endif ?>
+	<?php if ($alpha && ($allSliders || in_array('alpha', $displayValues))) : ?>
+		<input type="range" min="0" max="100" class="form-control color-slider alpha-slider" data-type="alpha"
+			<?php echo
+			$autofocus,
+			$disabled
+			?>
+		/>
 	<?php endif ?>
 </div>

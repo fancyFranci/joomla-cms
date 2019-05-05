@@ -12,17 +12,19 @@
   const hexRegex = new RegExp(/^#([a-z0-9]{2})([a-z0-9]{2})([a-z0-9]{2})$/i);
 
   /**
-   * Regex for rgb values e.g. rgb(255,0,24);
+   * Regex for rgb values e.g. rgba(255, 0, 24, 0.5);
    * @type {RegExp}
    */
-  const rgbRegex = new RegExp(/^rgb\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)\)$/i);
+  const rgbRegex = new RegExp(
+      /^rgba?\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)(?:[\D]+([0-9](?:.\d+)?))?\)$/i,
+  );
 
   /**
    * Regex for hsl values e.g. hsl(255,0,24);
    * @type {RegExp}
    */
   const hslRegex = new RegExp(
-    /^hsl\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)[\D]+\)$/i,
+      /^hsla?\(([0-9]+)[\D]+([0-9]+)[\D]+([0-9]+)[\D]+([0-9](?:.\d+)?)?\)$/i,
   );
 
   /**
@@ -41,6 +43,7 @@
       this.hueSlider = element.querySelector('.hue-slider');
       this.saturationSlider = element.querySelector('.saturation-slider');
       this.lightSlider = element.querySelector('.light-slider');
+      this.alphaSlider = element.querySelector('.alpha-slider');
 
       // Attributes
       this.color = element.dataset.color || '';
@@ -48,10 +51,12 @@
       this.display = element.dataset.display.split(',') || ['full'];
       this.format = element.dataset.format || 'hex';
       this.preview = element.dataset.preview === 'true';
+      this.setAlpha = this.format === 'hsla' || this.format === 'rgba';
 
       this.hue = 360;
       this.saturation = 1;
       this.light = 1;
+      this.alpha = 1;
 
       this.setInitValue();
       this.setBackground();
@@ -72,7 +77,7 @@
     updateValue(slider) {
       const rgb = this.getValueAsRgb(slider.value, slider.dataset.type);
       const hsl = this.rgbToHsl(rgb);
-      [this.hue, this.saturation, this.light] = hsl;
+      [this.hue, this.saturation, this.light, this.alpha] = hsl;
 
       this.input.style.border = `2px solid ${this.getRgbString(rgb)}`;
       this.setSliderValues(hsl, slider.dataset.type);
@@ -123,8 +128,9 @@
      * Convert given color into hue, saturation and light
      */
     setInitValue() {
+      // The initial value can be also a color defined in css
       const cssValue = window.getComputedStyle(this.input).getPropertyValue(this.default);
-      const value = this.color || cssValue || this.default || '';
+      const value = cssValue || this.color || this.default || '';
       let hsl = [];
 
       if (!value) {
@@ -141,13 +147,16 @@
         if (this.display.indexOf('light') !== -1) {
           hsl[2] = value;
         }
+        if (this.display.indexOf('alpha') !== -1) {
+          hsl[3] = value;
+        }
       } else if (hexRegex.test(value)) {
         hsl = this.hexToHsl(value);
       } else if (rgbRegex.test(value)) {
         hsl = this.rgbToHsl(value);
       } else if (hslRegex.test(value)) {
         const matches = value.match(hslRegex);
-        hsl = [matches[1], matches[2], matches[3]];
+        hsl = [matches[1], matches[2], matches[3], matches[4]];
       } else {
         throw new Error(`Incorrect input value ${value}.`);
       }
@@ -156,23 +165,24 @@
       hsl[2] = hsl[2] > 1 ? hsl[2] / 100 : hsl[2];
 
       [this.hue, this.saturation, this.light] = hsl;
+      this.alpha = hsl[4] || this.alpha;
 
       this.setSliderValues(hsl);
       this.setInputValue(hsl);
 
       if (typeof value !== 'number') {
         this.input.style.border = `2px solid ${this.getRgbString(
-          this.hslToRgb(hsl),
+            this.hslToRgb(hsl),
         )}`;
       }
     }
 
     /**
      * Set value in all sliders
-     * @param {array} [hsl]
+     * @param {array} [hsla]
      * @param {string} [except]
      */
-    setSliderValues([h, s, l], except) {
+    setSliderValues([h, s, l, a], except) {
       if (this.hueSlider && except !== 'hue') {
         this.hueSlider.value = Math.round(h);
       }
@@ -181,6 +191,9 @@
       }
       if (this.lightSlider && except !== 'light') {
         this.lightSlider.value = Math.round(l * 100);
+      }
+      if (a && this.alphaSlider && except !== 'alpha') {
+        this.alphaSlider.value = Math.round(a * 100);
       }
     }
 
@@ -193,13 +206,18 @@
 
       switch (this.format) {
         case 'hsl':
+        case 'hsla':
           value = this.getHslString(hsl);
           break;
         case 'rgb':
+        case 'rgba':
           value = this.getRgbString(this.hslToRgb(hsl));
           break;
         case 'hex':
           value = this.rgbToHex(this.hslToRgb(hsl));
+          break;
+        case 'alpha':
+          value = Math.round(hsl[3] * 100);
           break;
         case 'saturation':
           value = Math.round(hsl[1] * 100);
@@ -226,8 +244,12 @@
       let h = this.hue;
       let s = this.saturation;
       let l = this.light;
+      let a = this.alpha;
 
       switch (type) {
+        case 'alpha':
+          a = value;
+          break;
         case 'saturation':
           s = value;
           break;
@@ -246,30 +268,42 @@
       if (s > 1) {
         s /= 100;
       }
+      if (a > 1) {
+        a /= 100;
+      }
 
-      return this.hslToRgb([h, s, l]);
+      return this.hslToRgb([h, s, l, a]);
     }
 
     /**
      * Put RGB values into a string like 'rgb(<R>, <G>, <B>)'
-     * @params {array} rgb
+     * @params {array} rgba
      */
-    getRgbString(rgb) {
-      return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+    getRgbString([r, g, b, a]) {
+      if (this.setAlpha) {
+        let alpha = a || this.alpha;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+      return `rgb(${r}, ${g}, ${b})`;
     }
 
     /**
-     * Put HSL values into a string like 'hsl(<H>, <S>%, <L>%)'
+     * Put HSL values into a string like 'hsl(<H>, <S>%, <L>%, <a>)'
      * @params {array} values
      */
     getHslString(values) {
-      let hsl = values;
+      let [h, s, l, a] = values;
 
-      hsl[1] *= 100;
-      hsl[2] *= 100;
-      hsl = hsl.map(value => Math.round(value));
+      s *= 100;
+      l *= 100;
+      [h, s, l] = [h, s, l].map(value => Math.round(value));
 
-      return `hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
+      if (this.setAlpha) {
+        const a = a || this.alpha;
+        return `hsla(${h}, ${s}%, ${l}%, ${a})`;
+      }
+
+      return `hsl(${h}, ${s}%, ${l}%)`;
     }
 
     /**
@@ -300,7 +334,7 @@
 
       if (typeof values === 'string') {
         const parts = values.match(rgbRegex);
-        rgb = [parts[1], parts[2], parts[3]];
+        rgb = [parts[1], parts[2], parts[3], parts[4]];
       }
 
       const [r, g, b] = rgb.map(value => (value > 1 ? value / 255 : value));
@@ -310,6 +344,7 @@
       const d = max - min;
       let h = 0;
       let s = 0;
+      let a = rgb[3] || values[3] || this.alpha;
 
       if (max !== min) {
         if (max === 0) {
@@ -335,8 +370,9 @@
       }
 
       h = h < 0 ? h + 360 : h;
+      a = a > 1 ? a / 100 : a;
 
-      return [h, s, l];
+      return [h, s, l, a];
     }
 
     /**
@@ -356,11 +392,11 @@
     }
 
     /**
-     * Convert HSL values into RGB
-     * @param {array} hsl
+     * Convert HSLa values into RGBa
+     * @param {array} hsla
      * @returns {number[]}
      */
-    hslToRgb([h, sat, light]) {
+    hslToRgb([h, sat, light, alpha]) {
       let r = 1;
       let g = 1;
       let b = 1;
@@ -368,6 +404,7 @@
       // Saturation and light were calculated as 0.24 instead of 24%
       const s = sat > 1 ? sat / 100 : sat;
       const l = light > 1 ? light / 100 : light;
+      const a = alpha > 1 ? alpha / 100 : alpha;
 
       if (h < 0 || h > 360 || s < 0 || s > 1 || l < 0 || l > 1) {
         throw new Error(`Unable to convert hsl(${h}, ${s}, ${l}) into RGB.`);
@@ -394,7 +431,10 @@
         throw new Error(`Unable to convert hue ${h} into RGB.`);
       }
 
-      return [r, g, b].map(value => Math.round((value + m) * 255));
+      const rgb = [r, g, b].map(value => Math.round((value + m) * 255));
+      rgb.push(a);
+
+      return rgb;
     }
   }
 
